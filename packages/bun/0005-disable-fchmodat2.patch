@@ -7,7 +7,7 @@
 -        #[cfg(not(any(target_os = "macos", target_os = "freebsd")))]
 +        #[cfg(target_os = "android")]
 +        {
-+            fchmodat(Fd::cwd(), path, mode, libc::AT_SYMLINK_NOFOLLOW)
++            fchmodat(Fd::cwd(), path, mode, 0)
 +        }
 +        #[cfg(not(any(target_os = "macos", target_os = "freebsd", target_os = "android")))]
          {
