@@ -5,7 +5,7 @@ termux_step_create_debian_package() {
 	fi
 	# Clean up DEBIAN metadata directory from previous runs to prevent bundling it in data.tar.xz on continued builds.
 	rm -rf DEBIAN
-	tar --sort=name \
+	XZ_OPT="-T${TERMUX_PKG_MAKE_PROCESSES} ${XZ_OPT:-}" tar --sort=name \
 		--mtime="@${SOURCE_DATE_EPOCH}" \
 		--owner=0 --group=0 --numeric-owner \
 		-cJf "$TERMUX_PKG_PACKAGEDIR/data.tar.xz" -H gnu .
@@ -59,7 +59,7 @@ termux_step_create_debian_package() {
 	termux_step_create_python_debscripts
 
 	# Create control.tar.xz
-	tar --sort=name \
+	XZ_OPT="-T${TERMUX_PKG_MAKE_PROCESSES} ${XZ_OPT:-}" tar --sort=name \
 		--mtime="@${SOURCE_DATE_EPOCH}" \
 		--owner=0 --group=0 --numeric-owner \
 		-cJf "$TERMUX_PKG_PACKAGEDIR/control.tar.xz" -H gnu .

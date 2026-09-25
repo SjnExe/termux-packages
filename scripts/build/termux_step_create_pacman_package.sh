@@ -36,7 +36,7 @@ termux_step_create_pacman_package() {
 			COMPRESS=(lzip -c -f)
 			PKG_FORMAT="lz";;
 		"xz" | *)
-			COMPRESS=(xz -c -z -)
+			COMPRESS=(xz -T${TERMUX_PKG_MAKE_PROCESSES} -c -z -)
 			PKG_FORMAT="xz";;
 	esac
 
