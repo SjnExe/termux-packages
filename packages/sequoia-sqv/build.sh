@@ -22,7 +22,13 @@ termux_step_pre_configure() {
 	export PKG_CONFIG_PATH_x86_64_unknown_linux_gnu="$TERMUX_PKG_HOSTBUILD_DIR/ubuntu_packages/usr/lib/x86_64-linux-gnu/pkgconfig"
 
 	# error: function-like macro '__GLIBC_USE' is not defined
-	export BINDGEN_EXTRA_CLANG_ARGS_${CARGO_TARGET_NAME//-/_}="--sysroot ${TERMUX_STANDALONE_TOOLCHAIN}/sysroot --target=${CARGO_TARGET_NAME}"
+	local bindgen_target="${CARGO_TARGET_NAME}"
+	if [ "${TERMUX_ARCH}" = "arm" ]; then
+		bindgen_target="arm-linux-androideabi${TERMUX_PKG_API_LEVEL}"
+	else
+		bindgen_target="${TERMUX_ARCH}-linux-android${TERMUX_PKG_API_LEVEL}"
+	fi
+	export BINDGEN_EXTRA_CLANG_ARGS_${CARGO_TARGET_NAME//-/_}="--sysroot ${TERMUX_STANDALONE_TOOLCHAIN}/sysroot --target=${bindgen_target}"
 
 	# clashes with rust host build
 	unset CFLAGS
