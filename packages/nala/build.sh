@@ -25,17 +25,17 @@ termux_step_post_make_install() {
 		pandoc "${file}" --output="${file%.*}" --standalone \
 			--variable=header:"Nala User Manual" \
 			--variable=footer:"${TERMUX_PKG_VERSION}" \
-			--variable=date:"$(date -d @${SOURCE_DATE_EPOCH})" \
+			--variable=date:"$(date -d "@${SOURCE_DATE_EPOCH}")" \
 			--variable=section:8 \
 			--from rst --to man
 
 		install -Dm600 -t "$TERMUX_PREFIX"/share/man/man8/ "${file%.*}"
 	done
 
-	install -Dm600 -t $TERMUX_PREFIX/etc/nala debian/nala.conf
-	install -Dm600 debian/nala.fish "$TERMUX_PREFIX"/share/fish/vendor_completions.d/nala.fish
-	install -Dm600 debian/bash-completion "$TERMUX_PREFIX"/share/bash-completion/completions/nala
-	install -Dm600 debian/_nala "$TERMUX_PREFIX"/share/zsh/site-functions/_nala
+	install -Dm600 -t "$TERMUX_PREFIX/etc/nala" debian/nala.conf
+	install -Dm600 debian/nala.fish "$TERMUX_PREFIX/share/fish/vendor_completions.d/nala.fish"
+	install -Dm600 debian/bash-completion "$TERMUX_PREFIX/share/bash-completion/completions/nala"
+	install -Dm600 debian/_nala "$TERMUX_PREFIX/share/zsh/site-functions/_nala"
 }
 
 termux_step_create_debscripts() {
