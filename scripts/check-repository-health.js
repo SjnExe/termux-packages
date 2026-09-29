@@ -36,6 +36,7 @@ if (repos.pkg_format != "debian") {
   process.exit(1);
 }
 const repoPathMap = new Map();
+const repoLastModifiedMap = new Map();
 for (const path in repos) {
   if (path == "pkg_format") continue;
   const repo = repos[path];
@@ -50,6 +51,13 @@ for (const path in repos) {
     process.exit(1);
   }
   repoPathMap.set(repo.name, path);
+  const { stdout } = await execFileAsync("git", [
+    "log",
+    "-1",
+    "--format=%at",
+    path,
+  ]);
+  repoLastModifiedMap.set(repo.name, Number.parseInt(stdout));
 }
 
 async function getAptPackages(
@@ -175,13 +183,7 @@ async function getTermuxPackages(
           `Duplicate package "${pkgName}" earlier found in "${termuxPackages.get(pkgName).repo}" also in "${pkgRepo}" needs to be removed from termux-packages`,
         );
       }
-      const { stdout } = execFileAsync("git", [
-        "log",
-        "-1",
-        "--format=%at",
-        `${repoPathMap.get(pkgRepo)}`,
-      ]);
-      const lastModified = Number.parseInt(stdout);
+      const lastModified = repoLastModifiedMap.get(pkgRepo);
       termuxPackages.set(pkgName, {
         version: pkgVersion,
         repo: pkgRepo,
