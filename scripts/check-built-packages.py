@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from subprocess import Popen, PIPE
 
 version_map = {}
@@ -28,7 +29,11 @@ def check_manifest(arch, manifest):
             parts = line.decode().split(':', 1)
             current_package[parts[0].strip()] = parts[1].strip()
 
-for arch in ['all', 'aarch64', 'arm', 'i686', 'x86_64']:
+def fetch_and_check(arch):
     manifest_url = f'https://termux.dev/packages/dists/stable/main/binary-{arch}/Packages'
     with urllib.request.urlopen(manifest_url) as manifest:
         check_manifest(arch, manifest)
+
+arches = ['all', 'aarch64', 'arm', 'i686', 'x86_64']
+with ThreadPoolExecutor(max_workers=len(arches)) as executor:
+    list(executor.map(fetch_and_check, arches))
