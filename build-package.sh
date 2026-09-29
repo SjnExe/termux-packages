@@ -61,7 +61,7 @@ if [[ ! -e "$TERMUX_BUILD_LOCK_FILE" ]]; then
 	touch "$TERMUX_BUILD_LOCK_FILE"
 fi
 
-TERMUX_REPO_PKG_FORMAT="$(jq --raw-output '.pkg_format // "debian"' "${TERMUX_SCRIPTDIR}/repo.json")"
+TERMUX_REPO_PKG_FORMAT="$(jq --raw-output '.pkg_format // "debian"' "${TERMUX_SCRIPTDIR}/scripts/repo.json")"
 export TERMUX_REPO_PKG_FORMAT
 
 # Special variable for internal use. It forces script to ignore

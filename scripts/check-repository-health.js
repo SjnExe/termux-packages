@@ -30,7 +30,7 @@ if (process.argv.length != 3) {
 
 const outputDir = process.argv[2];
 
-const repos = JSON.parse(await readFile("repo.json"));
+const repos = JSON.parse(await readFile(new URL("repo.json", import.meta.url)));
 if (repos.pkg_format != "debian") {
   console.error(`Unsupported package format: ${repos.pkg_format}`);
   process.exit(1);
