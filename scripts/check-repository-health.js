@@ -82,61 +82,58 @@ async function getAptPackages(
   let pkgName = undefined;
   let pkgVersion = undefined;
   let pkgFilename = undefined;
-  data
-    .toString()
-    .split("\n")
-    .forEach(async (line) => {
-      // Package: <package-name>
-      if (line.startsWith("Package: ")) {
-        pkgName = line.substring("Package: ".length);
-      }
-      // Version: <package-version>
-      else if (line.startsWith("Version: ")) {
-        pkgVersion = line.substring("Version: ".length);
-      } else if (line.startsWith("Filename: ")) {
-        pkgFilename = line.substring("Filename: ".length);
-      }
-      // New line indicates the end of a package entry
-      else if (line == "") {
-        if (pkgName && pkgVersion && pkgFilename) {
-          if (aptPackages.has(pkgName)) {
-            const currentTime = Math.floor(new Date().getTime() / 1000);
-            let lastModified = currentTime;
-            if (termuxPackages.has(pkgName)) {
-              lastModified = termuxPackages.get(pkgName).lastModified;
-            }
-            // Only make this an error if the oldest deb with for the same package is older than 24 hours. The cron job on the server running aptly runs once every 6 hours, 24 hour is a bit more reasonable to make sure we don't fill errors that should not be there in case the cron job fails due to some reason
-            if (currentTime - lastModified >= 3600 * 24) {
-              errors.push(
-                `Duplicate package: "${pkgName}" when parsing Packages file for "${repo.name}" for "${arch}"`,
-              );
-              proposedManualFixes.push(
-                `Duplicate package "${pkgName}" will likely be removed automatically once the cron job responsible for cleaning older versions of packages kicks in on the aptly server.`,
-              );
-            }
-            try {
-              await execFileAsync("dpkg", [
-                "--compare-versions",
-                pkgVersion,
-                "ge",
-                aptPackages.get(pkgName).version,
-              ]);
-              aptPackages.get(pkgName).version = pkgVersion;
-            } catch (e) {}
-          } else {
-            // Only add the package version.
-            aptPackages.set(pkgName, {
-              version: pkgVersion,
-              filename: pkgFilename,
-              repo: repo.name,
-            });
+  for (const line of data.toString().split("\n")) {
+    // Package: <package-name>
+    if (line.startsWith("Package: ")) {
+      pkgName = line.substring("Package: ".length);
+    }
+    // Version: <package-version>
+    else if (line.startsWith("Version: ")) {
+      pkgVersion = line.substring("Version: ".length);
+    } else if (line.startsWith("Filename: ")) {
+      pkgFilename = line.substring("Filename: ".length);
+    }
+    // New line indicates the end of a package entry
+    else if (line == "") {
+      if (pkgName && pkgVersion && pkgFilename) {
+        if (aptPackages.has(pkgName)) {
+          const currentTime = Math.floor(new Date().getTime() / 1000);
+          let lastModified = currentTime;
+          if (termuxPackages.has(pkgName)) {
+            lastModified = termuxPackages.get(pkgName).lastModified;
           }
+          // Only make this an error if the oldest deb with for the same package is older than 24 hours. The cron job on the server running aptly runs once every 6 hours, 24 hour is a bit more reasonable to make sure we don't fill errors that should not be there in case the cron job fails due to some reason
+          if (currentTime - lastModified >= 3600 * 24) {
+            errors.push(
+              `Duplicate package: "${pkgName}" when parsing Packages file for "${repo.name}" for "${arch}"`,
+            );
+            proposedManualFixes.push(
+              `Duplicate package "${pkgName}" will likely be removed automatically once the cron job responsible for cleaning older versions of packages kicks in on the aptly server.`,
+            );
+          }
+          try {
+            await execFileAsync("dpkg", [
+              "--compare-versions",
+              pkgVersion,
+              "ge",
+              aptPackages.get(pkgName).version,
+            ]);
+            aptPackages.get(pkgName).version = pkgVersion;
+          } catch (e) {}
+        } else {
+          // Only add the package version.
+          aptPackages.set(pkgName, {
+            version: pkgVersion,
+            filename: pkgFilename,
+            repo: repo.name,
+          });
         }
-        pkgName = undefined;
-        pkgFilename = undefined;
-        pkgVersion = undefined;
       }
-    });
+      pkgName = undefined;
+      pkgFilename = undefined;
+      pkgVersion = undefined;
+    }
+  }
   // There should be extra newline at the end of the file, so this should
   // never be true, but just in case we check it to ensure we parsed the file
   // correctly.
