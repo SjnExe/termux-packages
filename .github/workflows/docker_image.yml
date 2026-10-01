@@ -55,7 +55,7 @@ jobs:
 
     - name: Set up Docker Buildx
       if: ${{ steps.skip-build.outputs.skip-build != 'true' }}
-      uses: docker/setup-buildx-action@v3
+      uses: docker/setup-buildx-action@v4
 
     - name: Build with Bake
       if: ${{ steps.skip-build.outputs.skip-build != 'true' }}
