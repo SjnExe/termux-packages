@@ -17,7 +17,7 @@ COPY ./llvm-snapshot.gpg.key ./properties.sh ./setup-android-sdk.sh ./setup-cgct
 RUN mkdir -p /tmp/termux-packages/scripts/build
 COPY ./build/termux_download.sh /tmp/termux-packages/scripts/build/
 
-# Setup needed packages and the Android SDK and NDK and the CGCT:
+# Create builder user:
 RUN apt-get update && \
 	apt-get -yq upgrade && \
 	apt-get install -yq sudo lsb-release software-properties-common && \
@@ -25,15 +25,18 @@ RUN apt-get update && \
 	useradd -u 1001 -U -m -s /bin/bash builder && \
 	echo "builder ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/builder && \
 	chmod 0440 /etc/sudoers.d/builder && \
-	chmod a+rx /tmp/termux-packages/scripts/*.sh /tmp/termux-packages/scripts/build/termux_download.sh && \
-	su - builder -c "TERMUX_PKGS__BUILD__IS_DOCKER_BUILD='true' /tmp/termux-packages/scripts/setup-ubuntu.sh" && \
-	su - builder -c "TERMUX_PKGS__BUILD__IS_DOCKER_BUILD='true' /tmp/termux-packages/scripts/setup-android-sdk.sh" && \
-	# Removed unused parts to make a smaller Docker image:
+	chmod a+rx /tmp/termux-packages/scripts/*.sh /tmp/termux-packages/scripts/build/termux_download.sh
+
+# Setup Ubuntu host build dependencies:
+RUN su - builder -c "TERMUX_PKGS__BUILD__IS_DOCKER_BUILD='true' /tmp/termux-packages/scripts/setup-ubuntu.sh" && \
 	apt-get remove -yq --autoremove lsb-release software-properties-common && \
 	apt-get clean && \
-	rm -rf /var/lib/apt/lists/* && \
-	su - builder -c "rm ~/lib/*.zip" && \
-	su - builder -c "rm -r ~/.android/cache/"
+	rm -rf /var/lib/apt/lists/*
+
+# Setup Android SDK and NDK:
+RUN su - builder -c "TERMUX_PKGS__BUILD__IS_DOCKER_BUILD='true' /tmp/termux-packages/scripts/setup-android-sdk.sh" && \
+	su - builder -c "rm -f ~/lib/*.zip" && \
+	su - builder -c "rm -rf ~/.android/cache/"
 
 # Switch User
 USER builder:builder
