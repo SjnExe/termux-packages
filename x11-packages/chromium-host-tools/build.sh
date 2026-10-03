@@ -16,7 +16,6 @@ TERMUX_PKG_NO_STRIP=true
 TERMUX_PKG_NO_ELF_CLEANER=true
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_ON_DEVICE_BUILD_NOT_SUPPORTED=true
-
 SYSTEM_LIBRARIES="    fontconfig"
 # TERMUX_PKG_DEPENDS="fontconfig"
 
@@ -97,7 +96,7 @@ termux_step_configure() {
 	# Fetch depot_tools
 	export DEPOT_TOOLS_UPDATE=0
 	if [ ! -f "$TERMUX_PKG_CACHEDIR/.depot_tools-fetched" ];then
-		git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git $TERMUX_PKG_CACHEDIR/depot_tools
+		git clone --depth=1 https://chromium.googlesource.com/chromium/tools/depot_tools.git $TERMUX_PKG_CACHEDIR/depot_tools
 		touch "$TERMUX_PKG_CACHEDIR/.depot_tools-fetched"
 	fi
 	export PATH="$TERMUX_PKG_CACHEDIR/depot_tools:$PATH"
@@ -319,6 +318,8 @@ exclude_unwind_tables = false
 use_jumbo_build = true
 # Compile pdfium as a static library
 pdf_is_complete_lib = true
+# Limit concurrent link actions to prevent runner OOM
+concurrent_links = 1
 " > $_common_args_file
 
 	if [ "$TERMUX_ARCH" = "arm" ]; then
@@ -366,34 +367,31 @@ termux_step_make() {
 	cd $TERMUX_PKG_BUILDDIR
 
 	# Build v8 snapshot and tools
-	time ninja -C out/Release \
-						v8_context_snapshot \
-						run_mksnapshot_default \
-						run_torque \
-						generate_bytecode_builtins_list \
-						v8:run_gen-regexp-special-case
+	ninja -j "${TERMUX_PKG_MAKE_PROCESSES}" -C out/Release \
+		v8_context_snapshot \
+		run_mksnapshot_default \
+		run_torque \
+		generate_bytecode_builtins_list \
+		v8:run_gen-regexp-special-case
 
 	# Build host tools
-	time ninja -C out/Release \
-						generate_top_domain_list_variables_file \
-						generate_chrome_colors_info \
-						character_data \
-						gen_root_store_inc \
-						generate_transport_security_state \
-						generate_top_domains_trie
+	ninja -j "${TERMUX_PKG_MAKE_PROCESSES}" -C out/Release \
+		generate_top_domain_list_variables_file \
+		generate_chrome_colors_info \
+		character_data \
+		gen_root_store_inc \
+		generate_transport_security_state \
+		generate_top_domains_trie
 
 	# Build swiftshader
-	time ninja -C out/Release \
-						third_party/swiftshader/src/Vulkan:icd_file \
-						third_party/swiftshader/src/Vulkan:swiftshader_libvulkan
+	ninja -j "${TERMUX_PKG_MAKE_PROCESSES}" -C out/Release \
+		third_party/swiftshader/src/Vulkan:icd_file \
+		third_party/swiftshader/src/Vulkan:swiftshader_libvulkan
 
 	# Build pdfium
-	time ninja -C out/Release \
-						third_party/pdfium \
-						third_party/pdfium:pdfium_public_headers
-
-	# # Build other components
-	# ninja -C out/Release chromedriver chrome chrome_crashpad_handler headless_shell
+	ninja -j "${TERMUX_PKG_MAKE_PROCESSES}" -C out/Release \
+		third_party/pdfium \
+		third_party/pdfium:pdfium_public_headers
 }
 
 termux_step_make_install() {
