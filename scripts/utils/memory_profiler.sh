@@ -11,11 +11,13 @@ peak_total_used_mb=0
 trap 'finish' EXIT SIGINT SIGTERM
 
 finish() {
+	trap - EXIT SIGINT SIGTERM
 	echo "=== Memory Profiling Peak Statistics ===" | tee "$SUMMARY_FILE"
 	echo "Peak RAM Used:   ${peak_ram_used_mb} MB" | tee -a "$SUMMARY_FILE"
 	echo "Peak Swap Used:  ${peak_swap_used_mb} MB" | tee -a "$SUMMARY_FILE"
 	echo "Peak Total Used: ${peak_total_used_mb} MB" | tee -a "$SUMMARY_FILE"
 	echo "=========================================" | tee -a "$SUMMARY_FILE"
+	exit 0
 }
 
 echo "Timestamp RAM_Used_MB Swap_Used_MB Total_Used_MB" > "$LOG_FILE"

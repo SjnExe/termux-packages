@@ -41,6 +41,7 @@ jobs:
     strategy:
       matrix:
         target_arch: [aarch64, arm, i686, x86_64]
+        use_zram: [true, false]
       fail-fast: false
     steps:
     - name: Clone repository
@@ -245,7 +246,7 @@ jobs:
         fi
 
     - name: Enable zram
-      if: ${{ steps.build-info.outputs.skip-building != 'true' && inputs.disable_zram != true }}
+      if: ${{ steps.build-info.outputs.skip-building != 'true' && matrix.use_zram == true }}
       uses: ./.github/actions/zram
       with:
         algorithm: zstd
@@ -349,22 +350,22 @@ jobs:
 
         # Files containing certain symbols (e.g. ":") will cause failure in actions/upload-artifact.
         # Archiving *.deb files in a tarball to avoid issues with uploading.
-        tar cf artifacts/debs-${{ matrix.target_arch }}-${{ github.sha }}.tar debs
+        tar cf artifacts/debs-${{ matrix.target_arch }}-zram-${{ matrix.use_zram }}-${{ github.sha }}.tar debs
     - name: Checksums for built *.deb files
       if: always()
       run: |
-        find debs -type f -name "*.deb" -exec sha256sum "{}" \; | sort -k2 | tee checksum-${{ matrix.target_arch }}-${{ github.sha }}.txt
+        find debs -type f -name "*.deb" -exec sha256sum "{}" \; | sort -k2 | tee checksum-${{ matrix.target_arch }}-zram-${{ matrix.use_zram }}-${{ github.sha }}.txt
     - name: Store checksums for built *.deb files
       if: always()
       uses: actions/upload-artifact@v7
       with:
-        name: checksum-${{ matrix.target_arch }}-${{ github.sha }}
-        path: checksum-${{ matrix.target_arch }}-${{ github.sha }}.txt
+        name: checksum-${{ matrix.target_arch }}-zram-${{ matrix.use_zram }}-${{ github.sha }}
+        path: checksum-${{ matrix.target_arch }}-zram-${{ matrix.use_zram }}-${{ github.sha }}.txt
     - name: Store *.deb files
       if: always()
       uses: actions/upload-artifact@v7
       with:
-        name: debs-${{ matrix.target_arch }}-${{ github.sha }}
+        name: debs-${{ matrix.target_arch }}-zram-${{ matrix.use_zram }}-${{ github.sha }}
         path: ./artifacts
     - name: AppArmor Logs
       if: always()
@@ -423,8 +424,8 @@ jobs:
           fi
         fi
 
-        for archive in debs-*/debs-{aarch64,arm,i686,x86_64}-${{ github.sha }}.tar; do
-          tar xf "$archive"
+        for archive in debs-*/debs-{aarch64,arm,i686,x86_64}-zram-*-${{ github.sha }}.tar; do
+          [ -f "$archive" ] && tar xf "$archive" || true
         done
 
         ./scripts/utils/termux_check_file_conflicts.sh debs
@@ -455,8 +456,8 @@ jobs:
       run: |
         source scripts/aptly_api.sh
 
-        for archive in debs-*/debs-{aarch64,arm,i686,x86_64}-${{ github.sha }}.tar; do
-          tar xf "$archive"
+        for archive in debs-*/debs-{aarch64,arm,i686,x86_64}-zram-*-${{ github.sha }}.tar; do
+          [ -f "$archive" ] && tar xf "$archive" || true
         done
 
         for repo in $(jq --raw-output 'del(.pkg_format) | keys | .[]' repo.json); do
