@@ -338,8 +338,15 @@ if [ "$(id -u)" = "0" ]; then
 	SUDO=""
 fi
 
-# Allow 32-bit packages.
-$SUDO dpkg --add-architecture i386
+HOST_ARCH="$(dpkg --print-architecture)"
+
+# Allow 32-bit packages on amd64 host.
+if [ "$HOST_ARCH" = "amd64" ]; then
+	$SUDO dpkg --add-architecture i386
+else
+	# Filter out :i386 package specs on non-amd64 hosts
+	PACKAGES="$(echo "$PACKAGES" | tr ' ' '\n' | grep -v ':i386$' | tr '\n' ' ')"
+fi
 
 # Install jq first, then source properties.sh
 $SUDO env DEBIAN_FRONTEND=noninteractive \
@@ -351,7 +358,7 @@ $SUDO env DEBIAN_FRONTEND=noninteractive \
 $SUDO cp $(dirname "$(realpath "$0")")/llvm-snapshot.gpg.key /etc/apt/trusted.gpg.d/apt.llvm.org.asc
 $SUDO chmod a+r /etc/apt/trusted.gpg.d/apt.llvm.org.asc
 {
-	echo "deb [arch=amd64] http://apt.llvm.org/resolute/ llvm-toolchain-resolute-${TERMUX_HOST_LLVM_MAJOR_VERSION} main"
+	echo "deb [arch=${HOST_ARCH}] http://apt.llvm.org/resolute/ llvm-toolchain-resolute-${TERMUX_HOST_LLVM_MAJOR_VERSION} main"
 } | $SUDO tee /etc/apt/sources.list.d/apt-llvm-org.list > /dev/null
 
 LLVM_PACKAGES=""

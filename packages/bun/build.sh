@@ -3,7 +3,7 @@ TERMUX_PKG_DESCRIPTION="Incredibly fast JavaScript runtime, bundler, test runner
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_MAINTAINER="Gouranga Das Samrat <gouranga.das.khulna@gmail.com>"
 TERMUX_PKG_VERSION="1.4.2"
-TERMUX_PKG_REVISION=4
+TERMUX_PKG_REVISION=5
 TERMUX_PKG_SRCURL=git+https://github.com/oven-sh/bun
 TERMUX_PKG_GIT_BRANCH="bun-v$TERMUX_PKG_VERSION"
 TERMUX_PKG_EXCLUDED_ARCHES="arm, i686"
@@ -50,7 +50,11 @@ termux_step_make() {
 	termux_setup_rust
 	termux_setup_bun
 
-	export BUN_TOOLCHAIN_LLVM="$NDK/toolchains/llvm/prebuilt/linux-x86_64"
+	if [[ -d "$NDK/toolchains/llvm/prebuilt/linux-aarch64" ]] && [[ ! -d "$NDK/toolchains/llvm/prebuilt/linux-x86_64" ]]; then
+		export BUN_TOOLCHAIN_LLVM="$NDK/toolchains/llvm/prebuilt/linux-aarch64"
+	else
+		export BUN_TOOLCHAIN_LLVM="$NDK/toolchains/llvm/prebuilt/linux-x86_64"
+	fi
 	export PATH="$BUN_TOOLCHAIN_LLVM/bin:$PATH"
 
 	local _bun_arch="$TERMUX_ARCH"

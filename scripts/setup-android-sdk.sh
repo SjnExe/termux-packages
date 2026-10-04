@@ -10,15 +10,34 @@ set -e -u
 
 ANDROID_SDK_FILE=commandlinetools-linux-${TERMUX_SDK_REVISION}_latest.zip
 ANDROID_SDK_SHA256=0bebf59339eaa534f4217f8aa0972d14dc49e7207be225511073c661ae01da0a
-if [ "$TERMUX_NDK_VERSION" = "30" ]; then
-	ANDROID_NDK_FILE=android-ndk-r${TERMUX_NDK_VERSION}-linux.zip
-	ANDROID_NDK_SHA256=753611f410d002cfcd3f3dc2ef49aad532089d3180b436c060a90bf0fcb64df2
-elif [ "$TERMUX_NDK_VERSION" = 23c ]; then
-	ANDROID_NDK_FILE=android-ndk-r${TERMUX_NDK_VERSION}-linux.zip
-	ANDROID_NDK_SHA256=6ce94604b77d28113ecd588d425363624a5228d9662450c48d2e4053f8039242
+
+HOST_ARCH=$(uname -m)
+if [ "$HOST_ARCH" = "aarch64" ] || [ "$HOST_ARCH" = "arm64" ]; then
+	if [ "$TERMUX_NDK_VERSION" = "30" ]; then
+		ANDROID_NDK_URL=${ANDROID_NDK_URL:-"https://github.com/Lzhiyong/termux-ndk/releases/download/v30.0/android-ndk-r30-aarch64.zip"}
+		ANDROID_NDK_FILE=android-ndk-r${TERMUX_NDK_VERSION}-aarch64.zip
+		ANDROID_NDK_SHA256=${ANDROID_NDK_SHA256:-"SKIP_CHECKSUM"}
+	elif [ "$TERMUX_NDK_VERSION" = "23c" ]; then
+		ANDROID_NDK_URL=${ANDROID_NDK_URL:-"https://github.com/Lzhiyong/termux-ndk/releases/download/v23c/android-ndk-r23c-aarch64.zip"}
+		ANDROID_NDK_FILE=android-ndk-r${TERMUX_NDK_VERSION}-aarch64.zip
+		ANDROID_NDK_SHA256=${ANDROID_NDK_SHA256:-"SKIP_CHECKSUM"}
+	else
+		echo "ERROR: unknown NDK version $TERMUX_NDK_VERSION" >&2
+		exit 1
+	fi
 else
-	echo "ERROR: unknown NDK version $TERMUX_NDK_VERSION" >&2
-	exit 1
+	if [ "$TERMUX_NDK_VERSION" = "30" ]; then
+		ANDROID_NDK_URL="https://dl.google.com/android/repository/android-ndk-r${TERMUX_NDK_VERSION}-linux.zip"
+		ANDROID_NDK_FILE=android-ndk-r${TERMUX_NDK_VERSION}-linux.zip
+		ANDROID_NDK_SHA256=753611f410d002cfcd3f3dc2ef49aad532089d3180b436c060a90bf0fcb64df2
+	elif [ "$TERMUX_NDK_VERSION" = "23c" ]; then
+		ANDROID_NDK_URL="https://dl.google.com/android/repository/android-ndk-r${TERMUX_NDK_VERSION}-linux.zip"
+		ANDROID_NDK_FILE=android-ndk-r${TERMUX_NDK_VERSION}-linux.zip
+		ANDROID_NDK_SHA256=6ce94604b77d28113ecd588d425363624a5228d9662450c48d2e4053f8039242
+	else
+		echo "ERROR: unknown NDK version $TERMUX_NDK_VERSION" >&2
+		exit 1
+	fi
 fi
 
 if [ ! -d "$ANDROID_HOME" ]; then
@@ -42,11 +61,18 @@ if [ ! -d "$NDK" ]; then
 
 	# https://developer.android.com/ndk/downloads
 	echo "Downloading Android NDK..."
-	termux_download https://dl.google.com/android/repository/${ANDROID_NDK_FILE} \
+	termux_download "${ANDROID_NDK_URL}" \
 		ndk-r${TERMUX_NDK_VERSION}.zip \
 		$ANDROID_NDK_SHA256
 	rm -Rf android-ndk-r$TERMUX_NDK_VERSION
 	unzip -q ndk-r${TERMUX_NDK_VERSION}.zip
+
+	# Ensure compatibility symlinks between linux-x86_64 and linux-aarch64 prebuilt directories
+	if [ -d "android-ndk-r$TERMUX_NDK_VERSION/toolchains/llvm/prebuilt/linux-aarch64" ] && [ ! -d "android-ndk-r$TERMUX_NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64" ]; then
+		ln -sf linux-aarch64 "android-ndk-r$TERMUX_NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64"
+	elif [ -d "android-ndk-r$TERMUX_NDK_VERSION/toolchains/llvm/prebuilt/linux-x86_64" ] && [ ! -d "android-ndk-r$TERMUX_NDK_VERSION/toolchains/llvm/prebuilt/linux-aarch64" ]; then
+		ln -sf linux-x86_64 "android-ndk-r$TERMUX_NDK_VERSION/toolchains/llvm/prebuilt/linux-aarch64"
+	fi
 
 	# Remove unused parts
 	rm -Rf android-ndk-r$TERMUX_NDK_VERSION/sources/cxx-stl/system

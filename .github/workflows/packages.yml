@@ -37,10 +37,19 @@ jobs:
   build:
     permissions:
       contents: read # actions/upload-artifact doesn't need contents: write
-    runs-on: ubuntu-26.04
+    runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
         target_arch: [aarch64, arm, i686, x86_64]
+        include:
+          - target_arch: aarch64
+            runner: ubuntu-26.04-arm64
+          - target_arch: arm
+            runner: ubuntu-26.04-arm64
+          - target_arch: i686
+            runner: ubuntu-26.04
+          - target_arch: x86_64
+            runner: ubuntu-26.04
       fail-fast: false
     steps:
     - name: Clone repository
