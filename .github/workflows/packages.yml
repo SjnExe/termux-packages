@@ -43,9 +43,9 @@ jobs:
         target_arch: [aarch64, arm, i686, x86_64]
         include:
           - target_arch: aarch64
-            runner: ubuntu-26.04-arm64
+            runner: ubuntu-24.04-arm64
           - target_arch: arm
-            runner: ubuntu-26.04-arm64
+            runner: ubuntu-24.04-arm64
           - target_arch: i686
             runner: ubuntu-26.04
           - target_arch: x86_64
