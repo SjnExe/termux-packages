@@ -245,13 +245,19 @@ jobs:
         fi
 
     - name: Enable zram
-      if: ${{ steps.build-info.outputs.skip-building != 'true' }}
+      if: ${{ steps.build-info.outputs.skip-building != 'true' && inputs.disable_zram != true }}
       uses: ./.github/actions/zram
       with:
         algorithm: zstd
         size: 16G
         priority: 100
         device_name: /dev/zram0
+
+    - name: Start Memory Profiler
+      if: ${{ steps.build-info.outputs.skip-building != 'true' }}
+      run: |
+        ./scripts/utils/memory_profiler.sh &
+        echo "PROFILER_PID=$!" >> $GITHUB_ENV
 
     - name: Build docker image
       if: ${{ steps.build-info.outputs.needs-docker-build == 'true' }}
@@ -305,6 +311,17 @@ jobs:
 
         if [[ "${#packages[@]}" -gt 0 ]]; then
           ./scripts/run-docker.sh -d ./build-package.sh -I -C -a "${{ matrix.target_arch }}" "${packages[@]}"
+        fi
+
+    - name: Report Memory Profiling Peak Statistics
+      if: always()
+      run: |
+        if [ -n "$PROFILER_PID" ]; then
+          kill -SIGINT "$PROFILER_PID" 2>/dev/null || true
+          sleep 1
+        fi
+        if [ -f /tmp/memory_profile_summary.log ]; then
+          cat /tmp/memory_profile_summary.log
         fi
 
     - name: Generate build artifacts
