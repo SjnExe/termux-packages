@@ -331,7 +331,7 @@ use_jumbo_build = true
 # Compile pdfium as a static library
 pdf_is_complete_lib = true
 # Limit concurrent link actions to prevent runner OOM
-concurrent_links = 1
+concurrent_links = ${CHROMIUM_CONCURRENT_LINKS:-1}
 " > $_common_args_file
 
 	if [ "$TERMUX_ARCH" = "arm" ]; then

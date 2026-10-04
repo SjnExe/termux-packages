@@ -299,6 +299,8 @@ jobs:
 
     - name: Build packages
       if: ${{ steps.build-info.outputs.skip-building != 'true' }}
+      env:
+        CHROMIUM_CONCURRENT_LINKS: ${{ matrix.use_zram && '1' || '2' }}
       run: |
         declare -a packages=()
         for repo_path in $(jq --raw-output 'del(.pkg_format) | keys | .[]' repo.json); do
@@ -309,9 +311,10 @@ jobs:
         done
 
         echo "packages: ${packages[*]}"
+        echo "CHROMIUM_CONCURRENT_LINKS: $CHROMIUM_CONCURRENT_LINKS"
 
         if [[ "${#packages[@]}" -gt 0 ]]; then
-          ./scripts/run-docker.sh -d ./build-package.sh -I -C -a "${{ matrix.target_arch }}" "${packages[@]}"
+          TERMUX_DOCKER_EXEC_EXTRA_ARGS="--env CHROMIUM_CONCURRENT_LINKS=$CHROMIUM_CONCURRENT_LINKS" ./scripts/run-docker.sh -d ./build-package.sh -I -C -a "${{ matrix.target_arch }}" "${packages[@]}"
         fi
 
     - name: Report Memory Profiling Peak Statistics
@@ -319,7 +322,7 @@ jobs:
       run: |
         if [ -n "$PROFILER_PID" ]; then
           kill -SIGINT "$PROFILER_PID" 2>/dev/null || true
-          sleep 1
+          wait "$PROFILER_PID" 2>/dev/null || true
         fi
         if [ -f /tmp/memory_profile_summary.log ]; then
           cat /tmp/memory_profile_summary.log
