@@ -3,6 +3,7 @@ TERMUX_PKG_DESCRIPTION="Chromium web browser"
 TERMUX_PKG_LICENSE="BSD 3-Clause"
 TERMUX_PKG_MAINTAINER="@licy183"
 TERMUX_PKG_VERSION="152.0.7977.82"
+TERMUX_PKG_REVISION=1
 TERMUX_PKG_SRCURL="https://commondatastorage.googleapis.com/chromium-browser-official/chromium-$TERMUX_PKG_VERSION-lite.tar.xz"
 TERMUX_PKG_SHA256=67ac37f365dfdac763c428862e5e460e5948940b3d6f856374da2ce219981417
 TERMUX_PKG_DEPENDS="atk, cups, dbus, fontconfig, gtk3, krb5, libc++, libevdev, libxkbcommon, libminizip, libnss, libx11, mesa, openssl, pango, pipewire, pulseaudio, zlib"
