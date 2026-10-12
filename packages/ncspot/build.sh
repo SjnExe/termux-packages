@@ -25,9 +25,6 @@ termux_step_pre_configure() {
 	# bindgen-cli@0.71.0 is broken
 	cargo install --force --locked bindgen-cli@0.69.5
 
-	# TODO: Remove this after aws-lc-sys > 0.26.0 update in Crago.toml
-	export CMAKE_POLICY_VERSION_MINIMUM=3.5
-
 	export TARGET_CMAKE_GENERATOR="Ninja"
 
 	# Setup subsequent cmake running inside cargo
