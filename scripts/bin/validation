@@ -29,13 +29,15 @@ esac
 STRATEGY=(50 50)
 EXCLUDE_BIG_PACKAGES=false
 BIG_PACKAGES_IN_SEPARATE_BATCH=false
+EACH_BIG_PACKAGE_IN_SEPARATE_BATCH=false
 
 case "${2}" in
 	golang)
 		readarray -t PACKAGES < <(grep -rl termux_setup_golang --include=build.sh --exclude-dir=golang "${TERMUX_PACKAGE_DIRECTORIES[@]}" | cut -d/ -f1,2 | sort -u | cut -d/ -f2 || :) || :
-		STRATEGY=(100)
+		STRATEGY=(20 20 20 20 20)
 		EXCLUDE_BIG_PACKAGES=true
 		BIG_PACKAGES_IN_SEPARATE_BATCH=true
+		EACH_BIG_PACKAGE_IN_SEPARATE_BATCH=true
 		;;
 	zig)
 		readarray -t PACKAGES < <(grep -rl termux_setup_zig --include=build.sh --exclude-dir=zig "${TERMUX_PACKAGE_DIRECTORIES[@]}" | cut -d/ -f1,2 | sort -u | cut -d/ -f2 || :) || :
@@ -117,38 +119,40 @@ split_build_job() {
 		OLD_MIDPOINT=${MIDPOINT}
 		BATCH_NO=$((BATCH_NO+1))
 	done
-	local BATCH=0
-	local PACKAGE_NO=0
-	local NEW_PACKAGE_RATIO=()
-	for PACKAGE in "${PACKAGES1[@]}"; do
-		if [[ "${EXCLUDE_BIG_PACKAGES}" == "true" ]]; then
-			local PKG
-			local BIG_PACKAGE=false
-			while IFS= read -r PKG; do
-				if [[ "${PKG}" == "${PACKAGE%:*}" ]]; then
-					BIG_PACKAGE=true
-					break
-				fi
-			done < <(echo "${BIG_PACKAGES[@]}" | tr " " "\n")
-			if [[ "${BIG_PACKAGE}" == true ]]; then
-				continue
-			fi
-		fi
-		if [[ "${BATCH}" != "${PACKAGE%:*}" ]]; then
-			printf "\n"
-			BATCH=$((BATCH+1))
-			PACKAGE_NO=0
-		fi
-		if [[ "${PACKAGE_NO}" == 0 ]]; then
-			printf "%s" "${PACKAGE#*:}"
-			NEW_PACKAGE_RATIO[BATCH]=1
-		else
-			printf " %s" "${PACKAGE#*:}"
-			NEW_PACKAGE_RATIO[BATCH]=$((NEW_PACKAGE_RATIO[BATCH]+1))
-		fi
-		PACKAGE_NO=$((PACKAGE_NO+1))
-	done
 	if [[ "${BIG_PACKAGES_IN_SEPARATE_BATCH}" == "true" ]]; then
+		if [[ "${EACH_BIG_PACKAGE_IN_SEPARATE_BATCH}" == "true" ]]; then
+			local I=0
+			local BIG_PKG
+			for BIG_PKG in "${BIG_PACKAGES[@]}"; do
+				local BATCH_IDX=$(( I % ${#STRATEGY[@]} ))
+				PACKAGES1+=("${BATCH_IDX}:${BIG_PKG}")
+				I=$(( I + 1 ))
+			done
+		fi
+	fi
+
+	local BATCH_NO
+	local NEW_PACKAGE_RATIO=()
+	for BATCH_NO in $(seq 0 $(( ${#STRATEGY[@]} - 1 ))); do
+		local FIRST=true
+		local PKG_ENTRY
+		local COUNT=0
+		for PKG_ENTRY in "${PACKAGES1[@]}"; do
+			if [[ "${PKG_ENTRY%:*}" == "${BATCH_NO}" ]]; then
+				if [[ "${FIRST}" == "true" ]]; then
+					[[ "${BATCH_NO}" -gt 0 ]] && printf "\n"
+					printf "%s" "${PKG_ENTRY#*:}"
+					FIRST=false
+				else
+					printf " %s" "${PKG_ENTRY#*:}"
+				fi
+				COUNT=$(( COUNT + 1 ))
+			fi
+		done
+		NEW_PACKAGE_RATIO+=("${COUNT}")
+	done
+
+	if [[ "${BIG_PACKAGES_IN_SEPARATE_BATCH}" == "true" ]] && [[ "${EACH_BIG_PACKAGE_IN_SEPARATE_BATCH}" != "true" ]]; then
 		printf "\n%s" "$(echo "${BIG_PACKAGES[@]}" | tr "\n" " " | sed "s| $||")"
 		NEW_PACKAGE_RATIO+=("${#BIG_PACKAGES[@]}")
 	fi
@@ -201,7 +205,7 @@ maybe_cleanup() {
 		return
 	fi
 
-	./scripts/run-docker.sh ./clean.sh
+	./scripts/run-docker.sh ./clean.sh --preserve-cache
 	rm -rf ./output/*
 }
 
