@@ -29,13 +29,15 @@ esac
 STRATEGY=(50 50)
 EXCLUDE_BIG_PACKAGES=false
 BIG_PACKAGES_IN_SEPARATE_BATCH=false
+EACH_BIG_PACKAGE_IN_SEPARATE_BATCH=false
 
 case "${2}" in
 	golang)
 		readarray -t PACKAGES < <(grep -rl termux_setup_golang --include=build.sh --exclude-dir=golang "${TERMUX_PACKAGE_DIRECTORIES[@]}" | cut -d/ -f1,2 | sort -u | cut -d/ -f2 || :) || :
-		STRATEGY=(100)
+		STRATEGY=(50 50)
 		EXCLUDE_BIG_PACKAGES=true
 		BIG_PACKAGES_IN_SEPARATE_BATCH=true
+		EACH_BIG_PACKAGE_IN_SEPARATE_BATCH=true
 		;;
 	zig)
 		readarray -t PACKAGES < <(grep -rl termux_setup_zig --include=build.sh --exclude-dir=zig "${TERMUX_PACKAGE_DIRECTORIES[@]}" | cut -d/ -f1,2 | sort -u | cut -d/ -f2 || :) || :
@@ -149,8 +151,16 @@ split_build_job() {
 		PACKAGE_NO=$((PACKAGE_NO+1))
 	done
 	if [[ "${BIG_PACKAGES_IN_SEPARATE_BATCH}" == "true" ]]; then
-		printf "\n%s" "$(echo "${BIG_PACKAGES[@]}" | tr "\n" " " | sed "s| $||")"
-		NEW_PACKAGE_RATIO+=("${#BIG_PACKAGES[@]}")
+		if [[ "${EACH_BIG_PACKAGE_IN_SEPARATE_BATCH}" == "true" ]]; then
+			local BIG_PKG
+			for BIG_PKG in "${BIG_PACKAGES[@]}"; do
+				printf "\n%s" "${BIG_PKG}"
+				NEW_PACKAGE_RATIO+=(1)
+			done
+		else
+			printf "\n%s" "$(echo "${BIG_PACKAGES[@]}" | tr "\n" " " | sed "s| $||")"
+			NEW_PACKAGE_RATIO+=("${#BIG_PACKAGES[@]}")
+		fi
 	fi
 	printf "\n\n"
 	echo "Number of packages:            ${#PACKAGES[@]}"
@@ -201,7 +211,7 @@ maybe_cleanup() {
 		return
 	fi
 
-	./scripts/run-docker.sh ./clean.sh
+	./scripts/run-docker.sh ./clean.sh --preserve-cache
 	rm -rf ./output/*
 }
 
