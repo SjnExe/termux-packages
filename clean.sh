@@ -30,6 +30,15 @@ test -f "$HOME/.termuxrc" && . "$HOME/.termuxrc"
 : "${TMPDIR:=/tmp}"
 export TMPDIR
 
+PRESERVE_CACHE=false
+for arg in "$@"; do
+	case "$arg" in
+		-p|--preserve-cache)
+			PRESERVE_CACHE=true
+			;;
+	esac
+done
+
 # Lock file. Same as used in build-package.sh.
 TERMUX_BUILD_LOCK_FILE="${TMPDIR}/.termux-build.lck"
 if [ ! -e "$TERMUX_BUILD_LOCK_FILE" ]; then
@@ -102,7 +111,11 @@ fi
 
 	# We can't use rm -Rf "$TERMUX_TOPDIR" in case the "$TERMUX_TOPDIR" is mounted as a Docker volume
 	if [ -d "$TERMUX_TOPDIR" ]; then
-		find "$TERMUX_TOPDIR" -type f,l,b,c -delete
-		find "$TERMUX_TOPDIR" -type d ! -path "$TERMUX_TOPDIR" -delete
+		if [ "$PRESERVE_CACHE" = "true" ]; then
+			find "$TERMUX_TOPDIR" -mindepth 1 -maxdepth 1 ! -name "_cache" -exec rm -rf {} +
+		else
+			find "$TERMUX_TOPDIR" -type f,l,b,c -delete
+			find "$TERMUX_TOPDIR" -type d ! -path "$TERMUX_TOPDIR" -delete
+		fi
 	fi
 } 5< "$TERMUX_BUILD_LOCK_FILE"
