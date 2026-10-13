@@ -34,7 +34,7 @@ EACH_BIG_PACKAGE_IN_SEPARATE_BATCH=false
 case "${2}" in
 	golang)
 		readarray -t PACKAGES < <(grep -rl termux_setup_golang --include=build.sh --exclude-dir=golang "${TERMUX_PACKAGE_DIRECTORIES[@]}" | cut -d/ -f1,2 | sort -u | cut -d/ -f2 || :) || :
-		STRATEGY=(20 20 20 20 20)
+		STRATEGY=(35 35 20 5 5)
 		EXCLUDE_BIG_PACKAGES=true
 		BIG_PACKAGES_IN_SEPARATE_BATCH=true
 		EACH_BIG_PACKAGE_IN_SEPARATE_BATCH=true
