@@ -1,6 +1,6 @@
 --- a/netconf/src/mgr/mgr_ses.c
 +++ b/netconf/src/mgr/mgr_ses.c
-@@ -718,7 +718,7 @@ static void
+@@ -621,7 +621,7 @@
          ses_putstr(scb, (const xmlChar *)str);
          ses_putchar(scb, ';');
      } else {

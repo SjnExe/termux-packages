@@ -1,0 +1,7 @@
++++ ./cmake-proxies/sqlite/CMakeLists.txt
+@@ -1,5 +1,5 @@
+
+-add_library( ${TARGET} SHARED )
++add_library( ${TARGET} STATIC )
+
+ def_vars()

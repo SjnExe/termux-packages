@@ -45,6 +45,5 @@ wasi-libc
 wasmer
 wezterm-nightly
 wine-stable
-zed
-zen-browser
 zig
+zen-browser

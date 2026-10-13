@@ -1,6 +1,7 @@
---- a/hw/9pfs/9p-local.c
-+++ b/hw/9pfs/9p-local.c
-@@ -545,9 +545,23 @@ static void local_rewinddir(FsContext *ctx, V9fsFidOpenState *fs)
+diff -uNr qemu-4.2.0/hw/9pfs/9p-local.c qemu-4.2.0.mod/hw/9pfs/9p-local.c
+--- qemu-4.2.0/hw/9pfs/9p-local.c	2019-12-12 20:20:47.000000000 +0200
++++ qemu-4.2.0.mod/hw/9pfs/9p-local.c	2019-12-15 00:12:11.073725293 +0200
+@@ -535,9 +535,23 @@
      rewinddir(fs->dir.stream);
  }
  
@@ -25,7 +26,7 @@
  }
  
  static bool local_is_mapped_file_metadata(FsContext *fs_ctx, const char *name)
-@@ -590,7 +604,7 @@ again:
+@@ -571,7 +585,7 @@
  
  static void local_seekdir(FsContext *ctx, V9fsFidOpenState *fs, off_t off)
  {

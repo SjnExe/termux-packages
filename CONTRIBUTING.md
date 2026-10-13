@@ -139,11 +139,10 @@ met these conditions:
   purposes, including but not limited to pentesting, phishing, bruteforce,
   sms/call bombing, DDoS attaks, OSINT.
 
-> [!NOTE]
-> Standalone library packages are of interest mostly for developers
-> and we prefer not package them unless required as a dependency for another package.
-> This is not a strong rule, but is  needed to ensure that repository is clean and
-> provides content useful for average Termux user.
+**Important**: standalone library packages are of interest mostly for developers
+and we will not package them unless required as dependency for another package.
+This is not a strong rule, but needed to ensure that repository is clean and
+provides content useful for average Termux user.
 
 Packages that require root permission to get working or rely on features that
 are available only with SELinux permissive mode or require custom firmware
@@ -159,55 +158,33 @@ https://github.com/termux-user-repository/tur
 
 ## Submitting pull requests
 
-Contributors take full responsibility for their submissions.
-Maintainers may provide some help with fixing your pull request
-or give some procedural recommendations, that DOES NOT mean they will do all of the work for you.
+Contributors take the all responsibility for their submissions. Maintainers may
+provide some help with fixing your pull request or give some recommendations,
+but that DOES NOT mean they will do all work instead of you.
 
-> [!IMPORTANT]
-> - If you have used or reused the work of another person for substantial parts of your contribution that should be disclosed,
-> and the person(s) whose work your contribution is based on should be credited with a [`Co-authored-by: Name <email@provider.tld>`](https://docs.github.com/en/pull-requests/how-tos/commit-changes/creating-a-commit-with-multiple-authors#creating-co-authored-commits-on-the-command-line) commit message trailer.
->
-> - If you have used LLM/AI assistance in your submission it is ***mandatory*** that this be disclosed as part of your contribution.
-> We do not make use of `Co-Authored-by: <LLM>` commit trailers in this repository.
-> AI/LLM assistance should instead be attributed with a `Assisted-by: <LLM> [TOOL1] [TOOL2]` commit message trailer.
-> Where `<LLM>` is either just *LLM*, or the generic name of the model/agent used,
-> and `[TOOL1] [TOOL2]` are optional specialized tools used.
-> Basic development tools (git, editors, harnesses, [utility scripts from the repo](/scripts/bin/)) should not be listed.
-> This requirement is based on the [Linux Kernel's coding assistance policy](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/Documentation/process/coding-assistants.rst?h=v7.3-rc6#n50).
+**Minimal requirements:**
 
-**Useful prerequisites:**
-
-- Experience with Linux distribution like Debian, Arch, Fedora, etc.
+- Experience with Linux distribution like Debian (preferred), Arch, Fedora, etc.
 - Experience with compiling software from source.
 - Good shell scripting skills.
 - You have read https://github.com/termux/termux-packages/wiki.
 
-If you never used a Linux distribution or Termux was your first experience with a
-Linux environment,<br>
-we recommend to NOT sending pull requests.<br>
-If you have an issue with a package but are unsure how to submit a fix for it<br>
-feel free to open a [new issue](https://github.com/termux/termux-packages/issues/new/choose) or comment on an existing one about the problem.
+If you never used Linux distribution or Termux was your first experience with
+Linux environment, we strongly recommending to NOT send pull requests since
+we will reject low quality work.
 
-Make sure to read the [packaging policy](#packaging-policy) when submitting new packages.
+Do not forget about [packaging policy](#packaging-policy) when submitting a
+new package, as your pull request will be closed without merge.
 
-We will reject low quality submissions.<br>
-We are happy to help out with questions about submission procedures,<br>
-the Termux build system and using Git if you aren't 100% sure about your submission.<br>
-The most important thing when making contributions is a willingness to work with reviewer feedback.
-
-Please also remember that Termux is a project run by volunteers.<br>
-We try to review PRs and respond to issues in a timely manner,<br>
-and we ask that the time and effort of our maintainers, contributors and reviewers is respected in turn.
-
-Do not send disruptive changes, like reverting commits without reason or<br>
-deleting files, creating spam content, etc. Authors of such pull requests may<br>
+Do not send disruptive changes, like without reason reverting commits or
+deleting files, creating spam content, etc. Authors of such pull requests may
 be blocked from contributing to [Termux](https://github.com/termux) project.
 
 ### Submitting new packages: checklist
 
-Besides violations of the [packaging policy](#packaging-policy), there is a
-number of typical mistakes that could be made when submitting a pull request with new packages.<br>
-Pay attention to things listed below.
+Besides violation of [packaging policy](#packaging-policy), there is a
+number of typical mistakes that could be made when submittung a pull
+request with new package. Pay attention to things listed below.
 
 1. **Versioning: format**
 
@@ -240,20 +217,14 @@ Pay attention to things listed below.
 
    Examples:
 
-   ```bash
+   ```
    TERMUX_PKG_VERSION=1.0
-   TERMUX_PKG_SRCURL="https://example.com/archive/package-${TERMUX_PKG_VERSION}.tar.gz"
+   TERMUX_PKG_SRCURL=https://example.com/archive/package-${TERMUX_PKG_VERSION}.tar.gz
    ```
 
-   ```bash
+   ```
    TERMUX_PKG_VERSION=5:4.11.3
-   TERMUX_PKG_SRCURL="https://example.com/archive/package-${TERMUX_PKG_VERSION:2}.tar.gz"
-   ```
-
-   ```bash
-   TERMUX_PKG_VERSION=1.23.45
-   TERMUX_PKG_SRCURL=git+https://github.com/owner/repo
-   TERMUX_PKG_GIT_BRANCH="v$TERMUX_PKG_VERSION" # default value, only needs to be set if differs
+   TERMUX_PKG_SRCURL=https://example.com/archive/package-${TERMUX_PKG_VERSION:2}.tar.gz
    ```
 
 4. **Dependencies: build tools**
@@ -272,25 +243,19 @@ Pay attention to things listed below.
 
 6. **Patches: format**
 
-   Patches are standard diff output generated by Git or GNU diff. Please
+   Patches are standard diff output generated by GNU diff or Git. Please
    avoid editing patches by hand, especially if you don't understand
    format internals.
 
-   Patches are usually created by
+   Patch is usually created by
 
-   ```bash
-   git diff > filename.patch
    ```
-   or
-   ```bash
    diff -uNr sourcedir sourcedir.mod > filename.patch
    ```
 
-   See: [*Creating patch files*](#creating-patch-files) for further details.
-
 7. **Patches: hardcoded path references**
 
-   Software often relies on paths defined by the [Filesystem Hierarchy Standard](https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard):
+   Software often relies on paths defined by Filesystem Hierarchy Standard:
 
    - `/bin`
    - `/etc`
@@ -302,41 +267,37 @@ Pay attention to things listed below.
    - `/var`
 
    These paths do not exist in Termux and have been replaced by prefixed
-   equivalents. Termux's standard installation prefix is
+   equivalents. Termux installation prefix is
 
-   ```console
+   ```
    /data/data/com.termux/files/usr
    ```
 
-   which can be considered a virtual root directory.
+   and can be considered as virtual rootfs.
 
-   The home directory is stored outside of the prefix at:
+   Home directory is stored outside of prefix:
 
-   ```console
+   ```
    /data/data/com.termux/files/home
    ```
 
-   Don't hardcode home and prefix, use the placeholders `@TERMUX_HOME@` and
+   Don't hardcode home and prefix, use shortcuts `@TERMUX_HOME@` and
    `@TERMUX_PREFIX@` respectively. Patch files are preprocessed before
    being applied.
 
    Directories `/run` and `/sbin` should be replaced by
    `@TERMUX_PREFIX@/var/run` and `@TERMUX_PREFIX@/bin` respectively.
 
-   `/usr` is already part of the `@TERMUX_PREFIX@`
-   so paths like `/usr/share` or `/usr/bin` should be replaced by
-   `@TERMUX_PREFIX@/share` and `@TERMUX_PREFIX@/bin` respectively.
-
 8. **Build configuration: compiler flags**
 
-   You should not touch variables such as `CFLAGS`, `CXXFLAGS`, `CPPFLAGS`
-   or `LDFLAGS` unless this is necessary to make the build work.
+   You should not touch `CFLAGS`, `CXXFLAGS`, `CPPFLAGS` or `LDFLAGS`
+   variables unless this is necessary to make build working.
 
-9. **Build configuration: build system flags**
+9. **Build configuration: autotools**
 
-   The `build-package.sh` script does most of the work to properly configure
-   package builds using common build systems such as GNU Autotools, CMake or Meson .
-   Therefore you do not need to specify flags like
+   The `build-package.sh` does pretty much work to properly configure
+   package builds using GNU Autotools. Therefore you do not need to
+   specify flags like
 
    - `--prefix`
    - `--host`
@@ -346,28 +307,23 @@ Pay attention to things listed below.
 
    and some others.
 
-   Additional options to `./configure` (or the build system's equivalent) can be passed through
+   Additional options to `./configure` can be passed through variable
    `TERMUX_PKG_EXTRA_CONFIGURE_ARGS`.
 
 ---
 
 # Working with packages
 
-All software available in Termux repositories aims to be compatible with Android OS and is built against the Android NDK.<br>
-This often introduces compatibility issues as Android (specifically Termux) is not a standard platform.<br>
-Do not expect there to be existing build scripts for Android/Termux available out-of-box.
-
-Existing packaging scripts can be a very helpful starting point for compiling packages for Termux.<br>
-[repology.org](https://repology.org/projects/) is a very helpful resource for finding information on existing project packaging.
-
-[Arch Linux](https://archlinux.org/packages/?q=)'s, [Fedora Linux](https://src.fedoraproject.org/projects/rpms/%2A)'s and [Alpine Linux](https://pkgs.alpinelinux.org/packages)'s build scripts for example tend to be of notably high quality<br>
-and are well suited for use as reference material when packaging for Termux.
+All software available in Termux repositories aims to be compatible with Android
+OS and is built by Android NDK. This often introduces compatibility issues as
+Android (specifically Termux) is not a standard platform. Do not expect there
+are exist package recipes available out-of-box.
 
 ## Commit guidelines
 
 Commit messages should describe the changes done, so that maintainers can understand what was done, and to what package or scope, without having to look at the code changes. One good (but not mandatory) way to make sure the commit message fulfills these requirements is to write it on the format:
 
-```commit
+```
 <commitType>(<repo>/<package>): (Summary of change(s) made/Short description of the change)
 
 [An optional but **highly recommended** commit message describing the changes made in the commit]
@@ -401,59 +357,59 @@ Any line in the commit **should not exceed 80 characters**. In case it does, con
   - `rebuild`: Rebuild a package to link against newer version of shared library
     Special cases:
     - When mass rebuilding packages depending on a major package (e.g. openssl), consider using this format:
-      ```commit
+      ```
       rebuild(deps:main/openssl): link against OpenSSL 3.0
       ```
-  - `scripts(path/to/script)`: Any change affecting our build scripts or other scripts which are not a part of build recipes including toolchain setup scripts.
+  - `scripts(path/to/script)`: Any change affecting our build scripts or other scripts which are not a part of build recipies including toolchain setup scripts.
   - `ci(action_file_without_extension)`: Any change that affects GitHub Actions yaml file(s) and/or scripts used exclusively by it.
 
 Examples of good commit messages:
 
-1. ```commit
-   bump(main/nodejs): 26.4.0
+1. ```
+   bump(main/nodejs): v18.2.0
    ```
 
-2. ```commit
-   dwnpkg(main/htop): 2.2.0
+2. ```
+   dwnpkg(main/htop): v2.2.0
 
    v3.x needs access to /proc/stat which is now restricted by Android
    ```
 
-3. ```commit
-   enhance,bump(main/nodejs): 26.4.0 and use shared libuv
+3. ```
+   enhance,bump(main/nodejs): v18.2.0 and use shared libuv
 
    # Describe the technical reasons of how using shared libuv is beneficial
    ```
 
-4. ```commit
+4. ```
    disable(main/nodejs): use LTS version instead
 
    PS: This won't ever happen. Just an example :P
    ```
 
-5. ```commit
+5. ```
    ci(package_updates): panic on invalid versions
    ```
 
-6. ```commit
+6. ```
    chore,scripts(bin/revbump): support passing path to build.sh
 
    Earlier only package directories defined in `repo.json` could be revbumped.
    Now you can pass the path to build.sh
    ```
 
-7. ```commit
+7. ```
    fix(main/nodejs{,-lts}): test failures for `process.report`
 
    This shows an example when scope can be minimised if they belong to the
    same repository, and have same initials as well as are very similar in
    nature.
 
-   The same can also be used for e.g. lua as main/lua{51,52,53,54,55,jit}
+   The same can also be used for liblua as main/liblua{51,52,53,54}
    ```
 
-8. ```commit
-   fix(main/{neo,}vim,x11/vim-gtk): cursor flickering under certain rare conditions
+8. ```
+   fix(main/vim{,-python},x11/vim-gtk): cursor flickering under certain rare conditions
 
    Although the above commit message is quite long and also exceeds the
    recommended length of a line in commit message. Such commits may be accepted
@@ -468,7 +424,7 @@ In order to encourage new contributors and help them contribute to open source, 
 
 1. It is recommended to use the [GitHub CLI (`gh`)](https://cli.github.com) in order to fetch the contributor's branch.
 
-   ```bash
+   ```sh
    gh pr checkout <PR Number>
    ```
 
@@ -478,7 +434,7 @@ In order to encourage new contributors and help them contribute to open source, 
 
    **Note** that the `Closes` and `Co-authored-by` lines are needed only when the PR author has disabled ability for maintainers to push to their branches. If possible, it is recommended to force-push to user's branch and then push the change to master branch since GitHub UI then will detect a merge.
 
-   ```bash
+   ```sh
    git fetch
    git rebase origin/master
 
@@ -492,13 +448,13 @@ In order to encourage new contributors and help them contribute to open source, 
 
 3. Note down the branch name
 
-   ```bash
+   ```sh
    git branch
    ```
 
 4. Merge the branch manually
 
-   ```bash
+   ```sh
    git switch master
 
    # Note depending upon your git configuration, the default
@@ -509,7 +465,7 @@ In order to encourage new contributors and help them contribute to open source, 
 
 5. Congratulate the user on sending their (probably) first OSS contribution!
 
-6. Note that sometimes GitHub UI may fail to detect the merge, in such cases make sure that you tell the contributor that their PR was merged manually and they'll receive their due credits in the repository contribution graph.
+6. Note that sometimes GitHub UI may fail to detect the merge, in such cases make sure that you tell the contributor that their PR was merged manually and they'll recieve their due credits in the repository contribution graph.
 
 ## Basics
 
@@ -521,13 +477,13 @@ it also used to override default packaging steps defined in our build system.
 
 Here is example of `build.sh`:
 
-```bash
+```.sh
 TERMUX_PKG_HOMEPAGE=https://example.com
 TERMUX_PKG_DESCRIPTION="Termux package"
 TERMUX_PKG_LICENSE="GPL-3.0"
-TERMUX_PKG_MAINTAINER="@termux"
+TERMUX_PKG_MAINTAINER="@github"
 TERMUX_PKG_VERSION=1.0
-TERMUX_PKG_SRCURL="https://example.com/sources-${TERMUX_PKG_VERSION}.tar.gz"
+TERMUX_PKG_SRCURL=https://example.com/sources-${TERMUX_PKG_VERSION}.tar.gz
 TERMUX_PKG_SHA256=0000000000000000000000000000000000000000000000000000000000000000
 TERMUX_PKG_DEPENDS="libiconv, ncurses"
 ```
@@ -544,16 +500,14 @@ It can contain some additional variables:
   This variable specifies that package is platform-independent and can run
   on any device regardless of CPU architecture.
 
-`TERMUX_PKG_LICENSE` should specify the license using [SPDX license identifiers](https://spdx.org/licenses/)
+`TERMUX_PKG_LICENSE` should specify the license using SPDX license identifier
 or can contain values "custom" or "non-free". Multiple licenses should be
 separated by commas.
 
 `TERMUX_PKG_SRCURL` should contain URL only for the official source bundle.
 Use of forks is allowed only under a good reason.
 
-Variable assignments containing `$VARIABLE` or `$(command substition)` expansions should be "quoted".
-
-For more about `build.sh` variables read the [developer's wiki](https://github.com/termux/termux-packages/wiki/Creating-new-package#table-of-available-package-control-fields).
+More about `build.sh` variables you can read on [developer's wiki](https://github.com/termux/termux-packages/wiki/Creating-new-package#table-of-available-package-control-fields).
 
 ### Creating patch files
 
@@ -602,30 +556,24 @@ generated by either GNU `diff`, `git` or other compatible utility.
    git diff > /path/to/package-build/example.patch
    ```
 > [!NOTE]
-> If you are making multiple patches you may want to run `git reset --hard`.<br>
+> If you are making multiple patches you may want to run `git reset HEAD --hard`.<br>
 > After saving a patch to a file so you do not duplicate parts between different patches.
 > Alternatively you can restrict what is included in the `git diff`
 > by passing a list of file/directory names to it as arguments.
 > This won't work for multiple separate patches to the same file though.
 
    If a project does not use Git, or makes significant additions to release tarballs.<br>
-   It is also possible to turn an extracted tarball into a Git repository for tracking changes.
-   ```bash
-   rm .gitignore; git init && git add . && git commit -m 'orig' &> /dev/null
-   ```
-   This may not always be applicable, for example with CVS checkouts.<br>
-   As another method of making patches you always have the option to use the `diff` utility.<br>
-   As described below.
+   You may need to resort to.
 
-<details><summary>Making patches using (GNU) <code>diff</code>:</summary>
+<details><summary>Making patches using GNU <code>diff</code>:</summary>
 <p>
 
 1. Get source code, for example with this command:
 
    ```bash
-   (source ${path_to}/packages/your-package/build.sh 2>/dev/null; curl -LO "$TERMUX_PKG_SRCURL")
+   cd ./packages/your-package
+   (source build.sh 2>/dev/null; curl -LO "$TERMUX_PKG_SRCURL")
    ```
-   <sup>Where `${path_to}` is the location where you cloned termux-packages.<sup>
 
 2. Extract tarball and make a copy of source code tree:
 
@@ -678,7 +626,7 @@ the changes.
 2. If there is `TERMUX_PKG_REVISION` variable set, remove it. Revision
    should be set only for subsequent package builds within the same version.
 3. Download the source code archive and compute SHA-256 checksum:
-   ```bash
+   ```
    cd ./packages/${YOUR_PACKAGE}
    (source build.sh 2>/dev/null; curl -LO "$TERMUX_PKG_SRCURL")
    ```
@@ -703,7 +651,7 @@ Here are few things you may to try:
 
    Regenerate patch file, e.g. with:
 
-   ```bash
+   ```
    diff -uNr package-1.0 package-1.0.mod > previously-failed-patch-file.patch
    ```
 
@@ -720,7 +668,7 @@ incrementing its value if already set.
 
 `TERMUX_PKG_REVISION` should be set exactly below `TERMUX_PKG_VERSION`:
 
-```bash
+```.sh
 TERMUX_PKG_VERSION=1.0
 TERMUX_PKG_REVISION=4
 ```
@@ -736,7 +684,7 @@ manager force recognize new version as package update.
 Epoch should be specified in same variable as version (`TERMUX_PKG_VERSION`),
 but its value will take different format (`{EPOCH}:{VERSION}`):
 
-```bash
+```.sh
 TERMUX_PKG_VERSION=1:5.0.0
 ```
 
@@ -746,7 +694,7 @@ which submit package downgrading without any serious reason will be rejected.
 
 ## Common build issues
 
-```console
+```
 No files in package. Maybe you need to run autoreconf -fi before configuring?
 ```
 
@@ -757,7 +705,7 @@ are some tips for trying:
 - Run `./autogen.sh` or `autoreconf -fi` in `termux_step_pre_configure`. This
   is applicable to projects that use Autotools.
 
-```console
+```
 No LICENSE file was installed for ...
 ```
 

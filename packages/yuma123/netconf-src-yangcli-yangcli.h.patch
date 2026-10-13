@@ -1,6 +1,6 @@
 --- a/netconf/src/yangcli/yangcli.h
 +++ b/netconf/src/yangcli/yangcli.h
-@@ -92,7 +92,7 @@ extern "C" {
+@@ -93,7 +93,7 @@
  
  #define YANGCLI_DEF_FIXORDER   TRUE
  

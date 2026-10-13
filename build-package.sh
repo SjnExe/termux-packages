@@ -108,10 +108,6 @@ source "$TERMUX_SCRIPTDIR/scripts/build/setup/termux_setup_crystal.sh"
 # shellcheck source=scripts/build/setup/termux_setup_dotnet.sh
 source "$TERMUX_SCRIPTDIR/scripts/build/setup/termux_setup_dotnet.sh"
 
-# Utility function for setting up Electron-based applications.
-# shellcheck source=scripts/build/setup/termux_setup_electron.sh
-source "$TERMUX_SCRIPTDIR/scripts/build/setup/termux_setup_electron.sh"
-
 # Utility function for setting up Flang toolchain.
 # shellcheck source=scripts/build/setup/termux_setup_flang.sh
 source "$TERMUX_SCRIPTDIR/scripts/build/setup/termux_setup_flang.sh"
