@@ -23,7 +23,7 @@
 /scripts/lint-packages.sh @TomJo2000
 
 # Repository Health Check
-/scripts/check-repository-health.js @thunder-coding
+/scripts/check-repository-health.ts @thunder-coding
 /scripts/generate-apt-packages-list.sh @thunder-coding
 
 # GN setup script
