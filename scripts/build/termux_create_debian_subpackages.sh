@@ -145,6 +145,7 @@ termux_create_debian_subpackages() {
 		termux_step_create_python_debscripts
 
 		# Create control.tar.xz
+		XZ_OPT="-T$TERMUX_PKG_MAKE_PROCESSES" \
 		tar --sort=name \
 			--mtime="@${SOURCE_DATE_EPOCH}" \
 			--owner=0 --group=0 --numeric-owner \
