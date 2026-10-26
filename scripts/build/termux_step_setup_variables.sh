@@ -7,7 +7,6 @@ termux_step_setup_variables() {
 	: "${TERMUX_INSTALL_DEPS:="false"}"
 	: "${TERMUX_PKG_MAKE_PROCESSES:="$(nproc)"}"
 	: "${XZ_OPT:="-T$TERMUX_PKG_MAKE_PROCESSES"}"
-	export XZ_OPT
 	: "${TERMUX_PKGS__BUILD__RM_ALL_PKGS_BUILT_MARKER_AND_INSTALL_FILES:="true"}"
 	: "${TERMUX_PKGS__BUILD__RM_ALL_PKG_BUILD_DEPENDENT_DIRS:="false"}"
 	: "${TERMUX_PKG_API_LEVEL:="24"}"
@@ -111,6 +110,7 @@ termux_step_setup_variables() {
 
 	# Explicitly export in case the default was set.
 	export TERMUX_ARCH=${TERMUX_ARCH}
+	export XZ_OPT=${XZ_OPT}
 
 	if [ "${TERMUX_PACKAGES_OFFLINE-false}" = "true" ]; then
 		# In "offline" mode store/pick cache from directory with
