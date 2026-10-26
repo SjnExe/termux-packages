@@ -20,6 +20,9 @@ termux_step_make() {
 	(cd incubating/account/js && bun install)
 
 	cd cli
+	# Disable strict bun version check in build-cli.mjs
+	sed -i 's/1\.4\.2/process.versions.bun/g' scripts/build-cli.mjs
+
 	bun install
 	CLI_APP_VERSION_NAME="cli-drive-termux" \
 	CLI_VERSION="$TERMUX_PKG_VERSION" \
