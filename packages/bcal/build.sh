@@ -3,6 +3,7 @@ TERMUX_PKG_DESCRIPTION="Command-line utility for storage conversions and calcula
 TERMUX_PKG_LICENSE="GPL-3.0"
 TERMUX_PKG_MAINTAINER="@termux"
 TERMUX_PKG_VERSION="2.6"
+TERMUX_PKG_REVISION=1
 TERMUX_PKG_SRCURL="https://github.com/jarun/bcal/archive/refs/tags/v${TERMUX_PKG_VERSION}.tar.gz"
 TERMUX_PKG_SHA256=bac318405221f2f88d374683549338515b070ca7491497eda2ac9c17bcbb0458
 TERMUX_PKG_DEPENDS="readline"
