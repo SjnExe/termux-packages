@@ -1,0 +1,22 @@
+--- a/src/library/base/R/datetime.R
++++ b/src/library/base/R/datetime.R
+@@ -149,6 +149,19 @@
+         }
+     }
+ 
++    ## Android / Termux: query persist.sys.timezone via getprop
++    if (grepl("android", R.Version()$os, ignore.case = TRUE) &&
++        file.exists("/system/bin/getprop")) {
++        tz0 <- try(system("/system/bin/getprop persist.sys.timezone", intern = TRUE), silent = TRUE)
++        if (!inherits(tz0, "try-error") && length(tz0) == 1L) {
++            tz <- trimws(tz0)
++            if (nzchar(tz)) {
++                cacheIt(tz)
++                return(tz)
++            }
++        }
++    }
++
+     ## non-Debian Linux (if not covered above), macOS, *BSD, ...
+     ## According to the glibc's (at least 2.26)
+     ##   manual/time.texi, it can be configured to use
