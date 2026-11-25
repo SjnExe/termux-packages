@@ -198,6 +198,9 @@ termux_step_make() {
 
 	sed -i -e "s|\$(top_builddir)/bin/Rscript|$TERMUX_PKG_HOSTBUILD_DIR/bin/Rscript|g" \
 		-e "s|\$(top_builddir)/bin/R|$host_r|g" doc/Makefile
+	mkdir -p share/bibliographies share/dictionaries
+	cp -f "$TERMUX_PKG_HOSTBUILD_DIR"/share/bibliographies/*.rds share/bibliographies/
+	cp -f "$TERMUX_PKG_HOSTBUILD_DIR"/share/dictionaries/*.rds share/dictionaries/
 	for sub in etc share po doc; do
 		make -j "$TERMUX_PKG_MAKE_PROCESSES" -C "$sub" R_EXE="$host_r --vanilla --no-echo"
 	done
