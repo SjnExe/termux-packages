@@ -121,8 +121,8 @@ termux_step_pre_configure() {
 		local flang_libs_dir="$flang_toolchain_dir/sysroot/usr/lib/$TERMUX_HOST_PLATFORM"
 		mkdir -p "$TERMUX_PKG_TMPDIR/_deps"
 		ln -sf "$flang_libs_dir/libflang_rt.runtime.a" "$TERMUX_PKG_TMPDIR/_deps/"
-		export ac_cv_f77_libs="-L$TERMUX_PKG_TMPDIR/_deps -l:libflang_rt.runtime.a"
-		export ac_cv_fc_libs="-L$TERMUX_PKG_TMPDIR/_deps -l:libflang_rt.runtime.a"
+		export ac_cv_f77_libs="-L$TERMUX_PKG_TMPDIR/_deps -l:libflang_rt.runtime.a -lm"
+		export ac_cv_fc_libs="-L$TERMUX_PKG_TMPDIR/_deps -l:libflang_rt.runtime.a -lm"
 		export r_cv_func_calloc_works=yes
 		export r_cv_func_isfinite_works=yes
 		export r_cv_func_log1p_works=yes
@@ -147,6 +147,7 @@ termux_step_pre_configure() {
 	fi
 
 	LDFLAGS+=" -landroid-complex-math"
+	export LIBS="${LIBS:-} -landroid-glob"
 }
 
 termux_step_post_configure() {
