@@ -184,7 +184,8 @@ termux_step_make() {
 	rm -f "$TERMUX_PKG_HOSTBUILD_DIR/lib/libR.so"
 	mv -f "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf.host" "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf"
 
-	sed -i "s|\.\./bin/R|$host_r|g" doc/Makefile
+	sed -i -e "s|\$(top_builddir)/bin/Rscript|$TERMUX_PKG_HOSTBUILD_DIR/bin/Rscript|g" \
+		-e "s|\$(top_builddir)/bin/R|$host_r|g" doc/Makefile
 	for sub in etc share po doc; do
 		make -j "$TERMUX_PKG_MAKE_PROCESSES" -C "$sub" R_EXE="$host_r --vanilla --no-echo"
 	done
