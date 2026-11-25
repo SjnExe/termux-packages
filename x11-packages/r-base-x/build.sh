@@ -101,8 +101,7 @@ termux_step_host_build() {
 			--without-tcltk \
 			--without-ICU \
 			--without-readline \
-			--without-cairo \
-			--without-recommended-packages
+			--without-cairo
 		make -j "$TERMUX_PKG_MAKE_PROCESSES"
 		patch -d "$TERMUX_PKG_SRCDIR" -p1 -R < "$TERMUX_PKG_BUILDER_DIR/0002-android-timezone.patch"
 	)
@@ -195,7 +194,7 @@ termux_step_make() {
 	for pkg in lattice nlme Matrix boot class cluster codetools foreign KernSmooth MASS mgcv nnet rpart spatial survival; do
 		for tgz in src/library/Recommended/"${pkg}".tgz src/library/Recommended/"${pkg}"_*.tgz; do
 			if [ -f "$tgz" ]; then
-				R_LIBS="$PWD/library" "$host_r" CMD INSTALL --no-test-load -l library "$tgz"
+				R_LIBS="$TERMUX_PKG_HOSTBUILD_DIR/library" "$host_r" CMD INSTALL --no-test-load -l library "$tgz"
 				break
 			fi
 		done
