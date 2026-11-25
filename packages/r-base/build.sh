@@ -7,6 +7,7 @@ TERMUX_PKG_SRCURL=https://cloud.r-project.org/src/base/R-${TERMUX_PKG_VERSION%%.
 TERMUX_PKG_SHA256=c297040f6392b1dac6e5c0eb398422cfdaedf540ae2205edb9ad0d10cb10ee00
 TERMUX_PKG_DEPENDS="bzip2, clang, flang, libandroid-complex-math, libcairo, libcurl, libiconv, libicu, libjpeg-turbo, liblzma, libopenblas, libpng, libtiff, make, pango, pcre2, readline, zlib"
 TERMUX_PKG_BUILD_IN_SRC=true
+TERMUX_PKG_HOSTBUILD=true
 TERMUX_PKG_EXCLUDED_ARCHES="arm, i686"
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 --without-x
@@ -23,6 +24,66 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 ac_cv_have_decl_wctrans=yes
 ac_cv_func_wctrans=yes
 "
+
+termux_step_host_build() {
+	if [ "$TERMUX_ON_DEVICE_BUILD" = "true" ]; then
+		return
+	fi
+
+	termux_download_ubuntu_packages \
+		gfortran \
+		gfortran-x86-64-linux-gnu \
+		gfortran-15 \
+		gfortran-15-x86-64-linux-gnu \
+		libgfortran-15-dev \
+		libgfortran5 \
+		libbz2-dev \
+		libbz2-1.0 \
+		liblzma-dev \
+		liblzma5 \
+		libpcre2-dev \
+		libpcre2-8-0 \
+		libpcre2-16-0 \
+		libpcre2-32-0 \
+		libpcre2-posix3
+
+	local HOSTBUILD_ROOTFS="$TERMUX_PKG_HOSTBUILD_DIR/ubuntu_packages"
+	find "$HOSTBUILD_ROOTFS" -type f -name '*.pc' -print0 | \
+		xargs -0 -n 1 sed -i -e "s|/usr|$HOSTBUILD_ROOTFS/usr|g"
+	find "$HOSTBUILD_ROOTFS" -xtype l | while read -r l; do
+		local target
+		target="$(readlink "$l")"
+		if [[ "$target" == /* ]]; then
+			ln -snfv "${HOSTBUILD_ROOTFS}${target}" "$l"
+		fi
+	done
+
+	cat <<- EOF > "$HOSTBUILD_ROOTFS/usr/bin/gfortran"
+		#!/bin/bash
+		exec "$HOSTBUILD_ROOTFS/usr/bin/x86_64-linux-gnu-gfortran-15" \
+			-B"$HOSTBUILD_ROOTFS/usr/libexec/gcc/x86_64-linux-gnu/15" \
+			-L"$HOSTBUILD_ROOTFS/usr/lib/gcc/x86_64-linux-gnu/15" \
+			-L"$HOSTBUILD_ROOTFS/usr/lib/x86_64-linux-gnu" \
+			"\$@"
+	EOF
+	chmod +x "$HOSTBUILD_ROOTFS/usr/bin/gfortran"
+
+	export PATH="$HOSTBUILD_ROOTFS/usr/bin:$PATH"
+	export CPPFLAGS="-I$HOSTBUILD_ROOTFS/usr/include -I$HOSTBUILD_ROOTFS/usr/include/x86_64-linux-gnu"
+	export LDFLAGS="-L$HOSTBUILD_ROOTFS/usr/lib/x86_64-linux-gnu -Wl,-rpath,$HOSTBUILD_ROOTFS/usr/lib/x86_64-linux-gnu"
+	export LD_LIBRARY_PATH="$HOSTBUILD_ROOTFS/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
+	export TZ=UTC
+
+	"$TERMUX_PKG_SRCDIR/configure" \
+		--without-x \
+		--disable-java \
+		--without-tcltk \
+		--without-ICU \
+		--without-readline \
+		--without-cairo \
+		--without-recommended-packages
+	make -j "$TERMUX_PKG_MAKE_PROCESSES"
+}
 
 termux_step_pre_configure() {
 	termux_setup_flang
@@ -63,4 +124,31 @@ termux_step_pre_configure() {
 
 termux_step_post_configure() {
 	sed -i 's|^SHLIB_LIBADD =.*|SHLIB_LIBADD = -lm|' etc/Makeconf
+
+	if [ "$TERMUX_ON_DEVICE_BUILD" = "false" ]; then
+		local host_r="$TERMUX_PKG_HOSTBUILD_DIR/bin/R"
+		sed -i "s|^R_EXE = .*|R_EXE = $host_r --vanilla --no-echo|" \
+			src/library/Makefile \
+			doc/Makefile \
+			doc/manual/Makefile 2>/dev/null || true
+		sed -i -e "s|\$(top_builddir)/bin/R CMD INSTALL|$host_r CMD INSTALL --no-test-load|g" \
+			-e "s|^R_EXE = .*|R_EXE = $host_r --vanilla --no-echo|" \
+			src/library/Recommended/Makefile 2>/dev/null || true
+	fi
+}
+
+termux_step_make() {
+	if [ "$TERMUX_ON_DEVICE_BUILD" = "false" ]; then
+		local HOSTBUILD_ROOTFS="$TERMUX_PKG_HOSTBUILD_DIR/ubuntu_packages"
+		export LD_LIBRARY_PATH="$HOSTBUILD_ROOTFS/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
+		cp -f "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf" "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf.host"
+		cp -f etc/Makeconf "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf"
+	fi
+
+	make -j "$TERMUX_PKG_MAKE_PROCESSES"
+	make -j "$TERMUX_PKG_MAKE_PROCESSES" docs
+
+	if [ "$TERMUX_ON_DEVICE_BUILD" = "false" ] && [ -f "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf.host" ]; then
+		mv -f "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf.host" "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf"
+	fi
 }
