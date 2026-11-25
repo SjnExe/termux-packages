@@ -72,6 +72,7 @@ termux_step_host_build() {
 
 	(
 		patch -d "$TERMUX_PKG_SRCDIR" -p1 -N < "$TERMUX_PKG_BUILDER_DIR/0002-android-timezone.patch"
+		grep -rl '@WHICH@' "$TERMUX_PKG_SRCDIR/src/library/" | xargs -r sed -i 's|@WHICH@|which|g'
 		export PATH="$TERMUX_PKG_HOSTBUILD_DIR/wrapper-bin:$HOSTBUILD_ROOTFS/usr/bin:$PATH"
 		export CPPFLAGS="-I$HOSTBUILD_ROOTFS/usr/include -I$HOSTBUILD_ROOTFS/usr/include/x86_64-linux-gnu"
 		export LDFLAGS="-L$HOSTBUILD_ROOTFS/usr/lib/x86_64-linux-gnu -Wl,-rpath,$HOSTBUILD_ROOTFS/usr/lib/x86_64-linux-gnu"
@@ -80,7 +81,6 @@ termux_step_host_build() {
 		export FLIBS="-L$HOSTBUILD_ROOTFS/usr/lib/gcc/x86_64-linux-gnu/15 -L$HOSTBUILD_ROOTFS/usr/lib/x86_64-linux-gnu -lgfortran -lm -lmvec"
 		export ac_cv_fc_libs="$FLIBS"
 		export ac_cv_f77_libs="$FLIBS"
-		export ac_cv_path_WHICH="which"
 		export TZ=UTC
 
 		"$TERMUX_PKG_SRCDIR/configure" \
