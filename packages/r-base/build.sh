@@ -1,7 +1,7 @@
 TERMUX_PKG_HOMEPAGE=https://www.r-project.org/
 TERMUX_PKG_DESCRIPTION="A free software environment for statistical computing and graphics"
 TERMUX_PKG_LICENSE="GPL-2.0, GPL-3.0"
-TERMUX_PKG_MAINTAINER="@termux"
+TERMUX_PKG_MAINTAINER="@SjnExe"
 TERMUX_PKG_VERSION="4.6.2"
 TERMUX_PKG_SRCURL=https://cloud.r-project.org/src/base/R-${TERMUX_PKG_VERSION%%.*}/R-${TERMUX_PKG_VERSION}.tar.gz
 TERMUX_PKG_SHA256=c297040f6392b1dac6e5c0eb398422cfdaedf540ae2205edb9ad0d10cb10ee00
@@ -29,6 +29,16 @@ termux_step_pre_configure() {
 	export F77="$FC"
 	export FFLAGS="$FCFLAGS"
 	export TZ=UTC
+
+	if [ "$TERMUX_ON_DEVICE_BUILD" = "false" ]; then
+		local flang_toolchain_dir="$(dirname $(dirname $(command -v flang-new)))"
+		local flang_libs_dir="$flang_toolchain_dir/sysroot/usr/lib/$TERMUX_HOST_PLATFORM"
+		mkdir -p "$TERMUX_PKG_TMPDIR/_deps"
+		ln -sf "$flang_libs_dir/libflang_rt.runtime.a" "$TERMUX_PKG_TMPDIR/_deps/"
+		export ac_cv_f77_libs="-L$TERMUX_PKG_TMPDIR/_deps -l:libflang_rt.runtime.a"
+		export ac_cv_fc_libs="-L$TERMUX_PKG_TMPDIR/_deps -l:libflang_rt.runtime.a"
+	fi
+
 	LDFLAGS+=" -landroid-complex-math"
 }
 
