@@ -131,47 +131,66 @@ termux_step_pre_configure() {
 
 termux_step_configure() {
 	if ! termux_step_configure_autotools; then
-		echo "=== config.log tail ==="
-		tail -n 100 config.log || true
+		echo "=== config.log readline/cos error ==="
+		grep -n -A 30 "checking for cos in -lm" config.log || true
+		grep -n -A 30 "checking for readline/history.h" config.log || true
 		return 1
 	fi
 }
 
 termux_step_post_configure() {
 	sed -i 's|^SHLIB_LIBADD =.*|SHLIB_LIBADD = -lm|' etc/Makeconf
-
-	if [ "$TERMUX_ON_DEVICE_BUILD" = "false" ]; then
-		local host_r="$TERMUX_PKG_HOSTBUILD_DIR/bin/R"
-		sed -i -e "s|\$(top_builddir)/bin/R CMD INSTALL|$host_r CMD INSTALL --no-test-load|g" \
-			src/library/Recommended/Makefile 2>/dev/null || true
-	fi
 }
 
 termux_step_make() {
-	local make_args=()
-	if [ "$TERMUX_ON_DEVICE_BUILD" = "false" ]; then
-		local HOSTBUILD_ROOTFS="$TERMUX_PKG_HOSTBUILD_DIR/ubuntu_packages"
-		export LD_LIBRARY_PATH="$HOSTBUILD_ROOTFS/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
-		cp -f "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf" "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf.host"
-		cp -f etc/Makeconf "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf"
-		make_args+=("R_EXE=$TERMUX_PKG_HOSTBUILD_DIR/bin/R --vanilla --no-echo")
+	if [ "$TERMUX_ON_DEVICE_BUILD" = "true" ]; then
+		make -j "$TERMUX_PKG_MAKE_PROCESSES"
+		make -j "$TERMUX_PKG_MAKE_PROCESSES" docs
+		return
 	fi
 
-	make -j "$TERMUX_PKG_MAKE_PROCESSES" "${make_args[@]}"
-	make -j "$TERMUX_PKG_MAKE_PROCESSES" "${make_args[@]}" docs
+	local HOSTBUILD_ROOTFS="$TERMUX_PKG_HOSTBUILD_DIR/ubuntu_packages"
+	export LD_LIBRARY_PATH="$HOSTBUILD_ROOTFS/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
+	local host_r="$TERMUX_PKG_HOSTBUILD_DIR/bin/R"
 
-	if [ "$TERMUX_ON_DEVICE_BUILD" = "false" ] && [ -f "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf.host" ]; then
-		mv -f "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf.host" "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf"
-	fi
+	# Build core R binaries, libR.so, modules, and base/library C/Fortran .so files
+	for sub in include extra appl nmath unix main modules; do
+		make -j "$TERMUX_PKG_MAKE_PROCESSES" -C "src/$sub"
+	done
+	for d in src/library/*/src; do
+		if [ -f "$d/Makefile" ]; then
+			make -j "$TERMUX_PKG_MAKE_PROCESSES" -C "$d"
+		fi
+	done
+
+	# Copy platform-independent lazy-load DBs/help/Meta from hostbuild (never host .so files)
+	mkdir -p library
+	for pkg_dir in "$TERMUX_PKG_HOSTBUILD_DIR"/library/*; do
+		local pkg
+		pkg="$(basename "$pkg_dir")"
+		mkdir -p "library/$pkg"
+		for item in "$pkg_dir"/*; do
+			[ "$(basename "$item")" = "libs" ] && continue
+			cp -r "$item" "library/$pkg/"
+		done
+	done
+
+	# Build Recommended packages using host R with target Makeconf and --no-test-load
+	cp -f "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf" "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf.host"
+	cp -f etc/Makeconf "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf"
+	for tgz in src/library/Recommended/*.tgz; do
+		"$host_r" CMD INSTALL --no-test-load -l library "$tgz"
+	done
+	mv -f "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf.host" "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf"
 }
 
 termux_step_make_install() {
-	local make_args=()
-	if [ "$TERMUX_ON_DEVICE_BUILD" = "false" ]; then
-		local HOSTBUILD_ROOTFS="$TERMUX_PKG_HOSTBUILD_DIR/ubuntu_packages"
-		export LD_LIBRARY_PATH="$HOSTBUILD_ROOTFS/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
-		make_args+=("R_EXE=$TERMUX_PKG_HOSTBUILD_DIR/bin/R --vanilla --no-echo")
+	if [ "$TERMUX_ON_DEVICE_BUILD" = "true" ]; then
+		make install
+		return
 	fi
 
-	make install "${make_args[@]}"
+	local HOSTBUILD_ROOTFS="$TERMUX_PKG_HOSTBUILD_DIR/ubuntu_packages"
+	export LD_LIBRARY_PATH="$HOSTBUILD_ROOTFS/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
+	make install R_EXE="$TERMUX_PKG_HOSTBUILD_DIR/bin/R --vanilla --no-echo"
 }
