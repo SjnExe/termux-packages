@@ -141,33 +141,49 @@ termux_step_pre_configure() {
 	LDFLAGS+=" -landroid-complex-math"
 }
 
+termux_step_configure() {
+	if ! termux_step_configure_autotools; then
+		echo "=== config.log tail ==="
+		tail -n 100 config.log || true
+		return 1
+	fi
+}
+
 termux_step_post_configure() {
 	sed -i 's|^SHLIB_LIBADD =.*|SHLIB_LIBADD = -lm|' etc/Makeconf
 
 	if [ "$TERMUX_ON_DEVICE_BUILD" = "false" ]; then
 		local host_r="$TERMUX_PKG_HOSTBUILD_DIR/bin/R"
-		sed -i "s|^R_EXE = .*|R_EXE = $host_r --vanilla --no-echo|" \
-			src/library/Makefile \
-			doc/Makefile \
-			doc/manual/Makefile 2>/dev/null || true
 		sed -i -e "s|\$(top_builddir)/bin/R CMD INSTALL|$host_r CMD INSTALL --no-test-load|g" \
-			-e "s|^R_EXE = .*|R_EXE = $host_r --vanilla --no-echo|" \
 			src/library/Recommended/Makefile 2>/dev/null || true
 	fi
 }
 
 termux_step_make() {
+	local make_args=()
 	if [ "$TERMUX_ON_DEVICE_BUILD" = "false" ]; then
 		local HOSTBUILD_ROOTFS="$TERMUX_PKG_HOSTBUILD_DIR/ubuntu_packages"
 		export LD_LIBRARY_PATH="$HOSTBUILD_ROOTFS/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
 		cp -f "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf" "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf.host"
 		cp -f etc/Makeconf "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf"
+		make_args+=("R_EXE=$TERMUX_PKG_HOSTBUILD_DIR/bin/R --vanilla --no-echo")
 	fi
 
-	make -j "$TERMUX_PKG_MAKE_PROCESSES"
-	make -j "$TERMUX_PKG_MAKE_PROCESSES" docs
+	make -j "$TERMUX_PKG_MAKE_PROCESSES" "${make_args[@]}"
+	make -j "$TERMUX_PKG_MAKE_PROCESSES" "${make_args[@]}" docs
 
 	if [ "$TERMUX_ON_DEVICE_BUILD" = "false" ] && [ -f "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf.host" ]; then
 		mv -f "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf.host" "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf"
 	fi
+}
+
+termux_step_make_install() {
+	local make_args=()
+	if [ "$TERMUX_ON_DEVICE_BUILD" = "false" ]; then
+		local HOSTBUILD_ROOTFS="$TERMUX_PKG_HOSTBUILD_DIR/ubuntu_packages"
+		export LD_LIBRARY_PATH="$HOSTBUILD_ROOTFS/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
+		make_args+=("R_EXE=$TERMUX_PKG_HOSTBUILD_DIR/bin/R --vanilla --no-echo")
+	fi
+
+	make install "${make_args[@]}"
 }
