@@ -177,12 +177,19 @@ termux_step_make() {
 		done
 	done
 
-	# Build Recommended packages using host R with target Makeconf and --no-test-load
+	# Build Recommended packages using host R with target Makeconf, libR.so, and --no-test-load
 	cp -f "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf" "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf.host"
 	cp -f etc/Makeconf "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf"
-	for tgz in src/library/Recommended/*.tgz; do
-		"$host_r" CMD INSTALL --no-test-load -l library "$tgz"
+	cp -f lib/libR.so "$TERMUX_PKG_HOSTBUILD_DIR/lib/libR.so"
+	local pkg tgz
+	for pkg in lattice nlme Matrix boot class cluster codetools foreign KernSmooth MASS mgcv nnet rpart spatial survival; do
+		for tgz in src/library/Recommended/${pkg}_*.tgz; do
+			if [ -f "$tgz" ]; then
+				R_LIBS="$PWD/library" "$host_r" CMD INSTALL --no-test-load -l library "$tgz"
+			fi
+		done
 	done
+	rm -f "$TERMUX_PKG_HOSTBUILD_DIR/lib/libR.so"
 	mv -f "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf.host" "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf"
 }
 
