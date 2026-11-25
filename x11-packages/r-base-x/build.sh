@@ -83,6 +83,7 @@ termux_step_host_build() {
 	chmod +x "$TERMUX_PKG_HOSTBUILD_DIR/wrapper-bin/gfortran"
 
 	(
+		patch -d "$TERMUX_PKG_SRCDIR" -p1 -N < "$TERMUX_PKG_BUILDER_DIR/0002-android-timezone.patch"
 		export PATH="$TERMUX_PKG_HOSTBUILD_DIR/wrapper-bin:$HOSTBUILD_ROOTFS/usr/bin:$PATH"
 		export CPPFLAGS="-I$HOSTBUILD_ROOTFS/usr/include -I$HOSTBUILD_ROOTFS/usr/include/x86_64-linux-gnu"
 		export LDFLAGS="-L$HOSTBUILD_ROOTFS/usr/lib/x86_64-linux-gnu -Wl,-rpath,$HOSTBUILD_ROOTFS/usr/lib/x86_64-linux-gnu"
@@ -91,6 +92,7 @@ termux_step_host_build() {
 		export FLIBS="-L$HOSTBUILD_ROOTFS/usr/lib/gcc/x86_64-linux-gnu/15 -L$HOSTBUILD_ROOTFS/usr/lib/x86_64-linux-gnu -lgfortran -lm -lmvec"
 		export ac_cv_fc_libs="$FLIBS"
 		export ac_cv_f77_libs="$FLIBS"
+		export ac_cv_path_WHICH="which"
 		export TZ=UTC
 
 		"$TERMUX_PKG_SRCDIR/configure" \
@@ -102,6 +104,7 @@ termux_step_host_build() {
 			--without-cairo \
 			--without-recommended-packages
 		make -j "$TERMUX_PKG_MAKE_PROCESSES"
+		patch -d "$TERMUX_PKG_SRCDIR" -p1 -R < "$TERMUX_PKG_BUILDER_DIR/0002-android-timezone.patch"
 	)
 }
 
@@ -190,9 +193,10 @@ termux_step_make() {
 	cp -f lib/libR.so "$TERMUX_PKG_HOSTBUILD_DIR/lib/libR.so"
 	local pkg tgz
 	for pkg in lattice nlme Matrix boot class cluster codetools foreign KernSmooth MASS mgcv nnet rpart spatial survival; do
-		for tgz in src/library/Recommended/"${pkg}"_*.tgz; do
+		for tgz in src/library/Recommended/"${pkg}".tgz src/library/Recommended/"${pkg}"_*.tgz; do
 			if [ -f "$tgz" ]; then
 				R_LIBS="$PWD/library" "$host_r" CMD INSTALL --no-test-load -l library "$tgz"
+				break
 			fi
 		done
 	done
@@ -219,6 +223,7 @@ termux_step_make_install() {
 	export LD_LIBRARY_PATH="$HOSTBUILD_ROOTFS/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
 	rm -rf "$TERMUX_PREFIX/lib/R"
 	make install R_EXE="$TERMUX_PKG_HOSTBUILD_DIR/bin/R --vanilla --no-echo"
+	sed -i "s|/usr/bin/|$TERMUX_PREFIX/bin/|g" "$TERMUX_PREFIX/lib/R/etc/Renviron"
 	local pkg
 	for pkg in lattice nlme Matrix boot class cluster codetools foreign KernSmooth MASS mgcv nnet rpart spatial survival; do
 		if [ -d "library/$pkg" ]; then
