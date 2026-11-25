@@ -85,6 +85,10 @@ termux_step_host_build() {
 	export CPPFLAGS="-I$HOSTBUILD_ROOTFS/usr/include -I$HOSTBUILD_ROOTFS/usr/include/x86_64-linux-gnu"
 	export LDFLAGS="-L$HOSTBUILD_ROOTFS/usr/lib/x86_64-linux-gnu -Wl,-rpath,$HOSTBUILD_ROOTFS/usr/lib/x86_64-linux-gnu"
 	export LD_LIBRARY_PATH="$HOSTBUILD_ROOTFS/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
+	export FFLAGS="-O2 -fno-tree-vectorize"
+	export FLIBS="-L$HOSTBUILD_ROOTFS/usr/lib/gcc/x86_64-linux-gnu/15 -L$HOSTBUILD_ROOTFS/usr/lib/x86_64-linux-gnu -lgfortran -lm -lmvec"
+	export ac_cv_fc_libs="$FLIBS"
+	export ac_cv_f77_libs="$FLIBS"
 	export TZ=UTC
 
 	"$TERMUX_PKG_SRCDIR/configure" \
