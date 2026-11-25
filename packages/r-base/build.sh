@@ -58,7 +58,8 @@ termux_step_host_build() {
 		fi
 	done
 
-	cat <<- EOF > "$HOSTBUILD_ROOTFS/usr/bin/gfortran"
+	mkdir -p "$TERMUX_PKG_HOSTBUILD_DIR/wrapper-bin"
+	cat <<- EOF > "$TERMUX_PKG_HOSTBUILD_DIR/wrapper-bin/gfortran"
 		#!/bin/bash
 		exec "$HOSTBUILD_ROOTFS/usr/bin/x86_64-linux-gnu-gfortran-15" \
 			-B"$HOSTBUILD_ROOTFS/usr/libexec/gcc/x86_64-linux-gnu/15" \
@@ -66,9 +67,9 @@ termux_step_host_build() {
 			-L"$HOSTBUILD_ROOTFS/usr/lib/x86_64-linux-gnu" \
 			"\$@"
 	EOF
-	chmod +x "$HOSTBUILD_ROOTFS/usr/bin/gfortran"
+	chmod +x "$TERMUX_PKG_HOSTBUILD_DIR/wrapper-bin/gfortran"
 
-	export PATH="$HOSTBUILD_ROOTFS/usr/bin:$PATH"
+	export PATH="$TERMUX_PKG_HOSTBUILD_DIR/wrapper-bin:$HOSTBUILD_ROOTFS/usr/bin:$PATH"
 	export CPPFLAGS="-I$HOSTBUILD_ROOTFS/usr/include -I$HOSTBUILD_ROOTFS/usr/include/x86_64-linux-gnu"
 	export LDFLAGS="-L$HOSTBUILD_ROOTFS/usr/lib/x86_64-linux-gnu -Wl,-rpath,$HOSTBUILD_ROOTFS/usr/lib/x86_64-linux-gnu"
 	export LD_LIBRARY_PATH="$HOSTBUILD_ROOTFS/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
