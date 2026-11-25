@@ -26,9 +26,6 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 --with-internal-tzcode
 ac_cv_have_decl_wctrans=yes
 ac_cv_func_wctrans=yes
-r_cv_header_zlib_h=yes
-r_cv_zdotu_is_usable=yes
-r_cv_working_ctanh=yes
 "
 
 termux_step_post_get_source() {
@@ -52,6 +49,25 @@ termux_step_pre_configure() {
 		ln -sf "$flang_libs_dir/libflang_rt.runtime.a" "$TERMUX_PKG_TMPDIR/_deps/"
 		export ac_cv_f77_libs="-L$TERMUX_PKG_TMPDIR/_deps -l:libflang_rt.runtime.a"
 		export ac_cv_fc_libs="-L$TERMUX_PKG_TMPDIR/_deps -l:libflang_rt.runtime.a"
+		export r_cv_func_calloc_works=yes
+		export r_cv_func_isfinite_works=yes
+		export r_cv_func_log1p_works=yes
+		export r_cv_working_ftell=yes
+		export r_cv_header_zlib_h=yes
+		export r_cv_have_bzlib=yes
+		export r_cv_have_lzma=yes
+		export r_cv_have_pcre2utf=yes
+		export r_cv_size_max=yes
+		export r_cv_iconv_latin1=yes
+		export r_cv_iconv_cp1252=yes
+		export r_cv_putenv_unset=no
+		export r_cv_putenv_unset2=no
+		export r_cv_func_sigaction_works=yes
+		export r_cv_icu=yes
+		export r_cv_have_curl728=yes
+		export r_cv_have_curl_https=yes
+		export r_cv_func_ctanh_works=yes
+		export r_cv_zdotu_is_usable=yes
 	fi
 
 	LDFLAGS+=" -landroid-complex-math"
