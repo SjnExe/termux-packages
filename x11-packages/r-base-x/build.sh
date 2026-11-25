@@ -111,7 +111,8 @@ termux_step_pre_configure() {
 	export TZ=UTC
 
 	if [ "$TERMUX_ON_DEVICE_BUILD" = "false" ]; then
-		local flang_toolchain_dir="$(dirname $(dirname $(command -v flang-new)))"
+		local flang_toolchain_dir
+		flang_toolchain_dir="$(dirname "$(dirname "$(command -v flang-new)")")"
 		local flang_libs_dir="$flang_toolchain_dir/sysroot/usr/lib/$TERMUX_HOST_PLATFORM"
 		mkdir -p "$TERMUX_PKG_TMPDIR/_deps"
 		ln -sf "$flang_libs_dir/libflang_rt.runtime.a" "$TERMUX_PKG_TMPDIR/_deps/"
@@ -141,15 +142,6 @@ termux_step_pre_configure() {
 	fi
 
 	LDFLAGS+=" -landroid-complex-math"
-}
-
-termux_step_configure() {
-	if ! termux_step_configure_autotools; then
-		echo "=== config.log readline/cos error ==="
-		grep -n -A 30 "checking for cos in -lm" config.log || true
-		grep -n -A 30 "checking for readline/history.h" config.log || true
-		return 1
-	fi
 }
 
 termux_step_post_configure() {
@@ -195,7 +187,7 @@ termux_step_make() {
 	cp -f lib/libR.so "$TERMUX_PKG_HOSTBUILD_DIR/lib/libR.so"
 	local pkg tgz
 	for pkg in lattice nlme Matrix boot class cluster codetools foreign KernSmooth MASS mgcv nnet rpart spatial survival; do
-		for tgz in src/library/Recommended/${pkg}_*.tgz; do
+		for tgz in src/library/Recommended/"${pkg}"_*.tgz; do
 			if [ -f "$tgz" ]; then
 				R_LIBS="$PWD/library" "$host_r" CMD INSTALL --no-test-load -l library "$tgz"
 			fi
@@ -204,8 +196,9 @@ termux_step_make() {
 	rm -f "$TERMUX_PKG_HOSTBUILD_DIR/lib/libR.so"
 	mv -f "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf.host" "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf"
 
+	sed -i "s|\.\./bin/R|$host_r|g" doc/Makefile
 	for sub in etc share po doc; do
-		make -j "$TERMUX_PKG_MAKE_PROCESSES" -C "$sub" R_EXE="$host_r --vanilla --no-echo" || true
+		make -j "$TERMUX_PKG_MAKE_PROCESSES" -C "$sub" R_EXE="$host_r --vanilla --no-echo"
 	done
 }
 
