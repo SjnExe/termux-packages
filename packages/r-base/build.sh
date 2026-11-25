@@ -124,6 +124,8 @@ termux_step_pre_configure() {
 		export r_cv_have_curl_https=yes
 		export r_cv_func_ctanh_works=yes
 		export r_cv_zdotu_is_usable=yes
+		# Prevent configure from exporting target LD_LIBRARY_PATH (/data/data/.../lib) into host x86_64 bash
+		sed -i -e 's/eval "\${Rshlibpath_var}=.*/:/g' -e 's/eval "export \${Rshlibpath_var}"/:/g' "$TERMUX_PKG_SRCDIR/configure"
 	fi
 
 	LDFLAGS+=" -landroid-complex-math"
@@ -153,8 +155,8 @@ termux_step_make() {
 	export LD_LIBRARY_PATH="$HOSTBUILD_ROOTFS/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
 	local host_r="$TERMUX_PKG_HOSTBUILD_DIR/bin/R"
 
-	# Build core R binaries, libR.so, modules, and base/library C/Fortran .so files
-	for sub in include extra appl nmath unix main modules; do
+	# Build core R scripts, binaries, libR.so, modules, and base/library C/Fortran .so files
+	for sub in scripts include extra appl nmath unix main modules; do
 		make -j "$TERMUX_PKG_MAKE_PROCESSES" -C "src/$sub"
 	done
 	for d in src/library/*/src; do
