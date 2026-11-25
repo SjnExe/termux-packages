@@ -21,6 +21,7 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 --with-pcre2
 --with-ICU
 --with-internal-tzcode
+R_SHELL=$TERMUX_PREFIX/bin/sh
 ac_cv_have_decl_wctrans=yes
 ac_cv_func_wctrans=yes
 "
@@ -97,6 +98,8 @@ termux_step_pre_configure() {
 	export F77="$FC"
 	export FFLAGS="$FCFLAGS"
 	export TZ=UTC
+
+	sed -i "s|\"/bin/sh\"|\"$TERMUX_PREFIX/bin/sh\"|g" "$TERMUX_PKG_SRCDIR/src/unix/sys-unix.c"
 
 	if [ "$TERMUX_ON_DEVICE_BUILD" = "false" ]; then
 		local flang_toolchain_dir
@@ -202,5 +205,13 @@ termux_step_make_install() {
 
 	local HOSTBUILD_ROOTFS="$TERMUX_PKG_HOSTBUILD_DIR/ubuntu_packages"
 	export LD_LIBRARY_PATH="$HOSTBUILD_ROOTFS/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
+	rm -rf "$TERMUX_PREFIX/lib/R"
 	make install R_EXE="$TERMUX_PKG_HOSTBUILD_DIR/bin/R --vanilla --no-echo"
+	local pkg
+	for pkg in lattice nlme Matrix boot class cluster codetools foreign KernSmooth MASS mgcv nnet rpart spatial survival; do
+		if [ -d "library/$pkg" ]; then
+			rm -rf "$TERMUX_PREFIX/lib/R/library/$pkg"
+			cp -r "library/$pkg" "$TERMUX_PREFIX/lib/R/library/"
+		fi
+	done
 }
