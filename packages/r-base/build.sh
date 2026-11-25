@@ -178,15 +178,20 @@ termux_step_make() {
 	cp -f "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf" "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf.host"
 	cp -f etc/Makeconf "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf"
 	cp -f lib/libR.so "$TERMUX_PKG_HOSTBUILD_DIR/lib/libR.so"
-	local pkg tgz
+	local pkg tgz rec_stage="$TERMUX_PKG_TMPDIR/rec_stage"
 	for pkg in lattice nlme Matrix boot class cluster codetools foreign KernSmooth MASS mgcv nnet rpart spatial survival; do
 		for tgz in src/library/Recommended/"${pkg}".tgz src/library/Recommended/"${pkg}"_*.tgz; do
 			if [ -f "$tgz" ]; then
-				R_LIBS="$TERMUX_PKG_HOSTBUILD_DIR/library" "$host_r" CMD INSTALL --no-test-load -l library "$tgz"
+				rm -rf "$rec_stage"
+				mkdir -p "$rec_stage"
+				R_LIBS="$TERMUX_PKG_HOSTBUILD_DIR/library" "$host_r" CMD INSTALL --no-test-load -l "$rec_stage" "$tgz"
+				rm -rf "library/$pkg"
+				mv "$rec_stage/$pkg" "library/$pkg"
 				break
 			fi
 		done
 	done
+	rm -rf "$rec_stage"
 	rm -f "$TERMUX_PKG_HOSTBUILD_DIR/lib/libR.so"
 	mv -f "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf.host" "$TERMUX_PKG_HOSTBUILD_DIR/etc/Makeconf"
 
