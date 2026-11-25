@@ -22,6 +22,9 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 --with-internal-tzcode
 ac_cv_have_decl_wctrans=yes
 ac_cv_func_wctrans=yes
+r_cv_header_zlib_h=yes
+r_cv_zdotu_is_usable=yes
+r_cv_working_ctanh=yes
 "
 
 termux_step_pre_configure() {

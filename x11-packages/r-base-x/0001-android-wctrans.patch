@@ -1,0 +1,35 @@
+--- a/src/include/rlocale.h
++++ b/src/include/rlocale.h
+@@ -38,6 +38,22 @@
+ #include <ctype.h>
+ #include <wctype.h>
+ 
++#if defined(__ANDROID__) && __ANDROID_API__ < 26
++#include <string.h>
++static inline wctrans_t r_android_wctrans(const char *property) {
++    if (strcmp(property, "toupper") == 0) return (wctrans_t) 1;
++    if (strcmp(property, "tolower") == 0) return (wctrans_t) 2;
++    return (wctrans_t) 0;
++}
++static inline wint_t r_android_towctrans(wint_t wc, wctrans_t desc) {
++    if (desc == (wctrans_t) 1) return towupper(wc);
++    if (desc == (wctrans_t) 2) return towlower(wc);
++    return wc;
++}
++#define wctrans r_android_wctrans
++#define towctrans r_android_towctrans
++#endif
++
+ /*
+   The R_wchar_t typedef represents a single Unicode code point.  On
+   most systems it is the same as wchar_t, but on Windows (and 32-bit
+--- a/src/main/grep.c
++++ b/src/main/grep.c
+@@ -67,6 +67,7 @@
+ #include <ctype.h>
+ #include <wchar.h>
+ #include <wctype.h>    /* for wctrans_t */
++#include <rlocale.h>
+ 
+ /* As from TRE 0.8.0, tre.h replaces regex.h */
+ #include <tre/tre.h>
